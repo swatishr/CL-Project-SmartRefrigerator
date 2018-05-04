@@ -118,6 +118,8 @@ lemma(drank,tv).
 lemma(drunk,tv).
 lemma(drinks,tv).
 lemma(contain,tv).
+lemma(has,tv).
+lemma(have,tv).
 
 lemma(in,p).
 lemma(under,p).
@@ -138,10 +140,32 @@ compare_lemma([W|WordList],[W|LemmaList]) :-
 % word = lemma + suffix (for "suffix" of size 0 or bigger)
 % --------------------------------------------------------------------
 
+%[every blue container on the top shelf contains a sandwich that has no meat]
+%[every white container on the bottom shelf contains a banana]
+
+%lex(X,blue)
+lex(adj((X^P)^X^and(P,Q)),Word):-
+  	lemma(Word,adj),
+    Q =.. [Word,X].
+
+%lex(X,the)
+lex(dt( (X^P)^(X^Q)^Z),Word):-
+  	lemma(Word,dtexists),
+    A = and(P,Q),
+    Z =..[Word,X,A].
+
+%lex(X,on)
+%vacp((Y^on(X,Y))^Q^(X^P)^and(P,Q))
+%vacp((Y^on(X,Y))^Q^(X^P)^and(P,Q))
+lex(vacp((Y^Z)^Q^(X^P)^and(P,Q)),Word) :-
+  lemma(Word,vacp),
+  Z =.. [Word,X,Y].
 
 lex(n(X^P),Lemma):-
 	lemma(Lemma,n,Stem),
 	P=.. [Stem,X].
+
+
 
 lex(dt((X^P)^(X^Q)^forall(X,imp(P,Q))),Word):-
 		lemma(Word,dtforall).
@@ -161,44 +185,29 @@ lex(dt((X^P)^(X^Q)^forall(X,imp(P,Q))),Word):-
 
 % NP -> DT N
 rule(np(Y),[dt(X^Y),n(X)]).
-
 % N -> N PP
 rule(n(X^Z),[n(X^Y),pp((X^Y)^Z)]).
-
 % N -> Adj N
 rule(n(Y),[adj(X^Y),n(X)]).
-
 % NP -> PN
 rule(np(X),[pn(X)]).
-
 % NP -> PRP
 rule(np(X),[prp(X)]).
-
 % PP -> P NP
 rule(pp(Z),[p(X^Y^Z),np(X^Y)]).
-
 % VP -> IV
 rule(vp(X),[iv(X)]).
-
 % VP -> TV NP
 rule(vp(X^W),[tv(X^Y),np(Y^W)]).
-
-% VP -> DTV NP NP eg: I gave Sue a burger 
+% VP -> DTV NP NP eg: I gave Sue a burger
 % VP -> DTV NP PP eg: I gave a burger to Sue
 % VP -> VP PP
 % VP -> SV S
-
 % VP -> ADV VP
-
 % VP -> AUX VP
-
-% DT -> NP POS do we need to handle this? POS->s 
-
-
+% DT -> NP POS do we need to handle this? POS->s
 % S -> NP VP
 rule(s(Y),[np(X^Y),vp(X)]).
-
-
 % ...
 
 
