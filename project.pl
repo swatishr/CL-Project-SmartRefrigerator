@@ -73,17 +73,43 @@ parse(Input, SemanticRepresentation):- write(Input).
 
 lemma(a,dtexists).
 lemma(an,dtexists).
+lemma(the,dtexists).
+
 lemma(each,dtforall).
 lemma(all,dtforall).
 lemma(every,dtforall).
+
+lemma(almond,n).
 lemma(box,n).
 lemma(banana,n).
+lemma(bowl,n).
+lemma(container,n).
+lemma(freezer,n).
+lemma(fridge,n).
+lemma(meat,n).
+lemma(milk,n).
+lemma(popsicles,n).
+lemma(sandwich,n).
+lemma(shelf,n).
+lemma(watermelon,n).
+
 lemma(tom,pn).
 lemma(mia,pn).
+lemma(sam,pn).
+
+lemma(almond,adj).
+lemma(empty,adj).
 lemma(red,adj).
+lemma(blue,adj).
+lemma(white,adj).
+lemma(top,adj).
+lemma(bottom,adj).
+lemma(middle,adj).
+lemma(yellow,adj).
 
 lemma(is,be).
 lemma(was,be).
+lemma(are,be).
 
 lemma(eat,tv).
 lemma(ate,tv).
@@ -95,6 +121,7 @@ lemma(contain,tv).
 
 lemma(in,p).
 lemma(under,p).
+lemma(below,p).
 lemma(on,vacp).
 lemma(to,vacp).
 
@@ -132,8 +159,45 @@ lex(dt((X^P)^(X^Q)^forall(X,imp(P,Q))),Word):-
 % rule(+LHS,+ListOfRHS)
 % --------------------------------------------------------------------
 
+% NP -> DT N
 rule(np(Y),[dt(X^Y),n(X)]).
+
+% N -> N PP
+rule(n(X^Z),[n(X^Y),pp((X^Y)^Z)]).
+
+% N -> Adj N
+rule(n(Y),[adj(X^Y),n(X)]).
+
+% NP -> PN
 rule(np(X),[pn(X)]).
+
+% NP -> PRP
+rule(np(X),[prp(X)]).
+
+% PP -> P NP
+rule(pp(Z),[p(X^Y^Z),np(X^Y)]).
+
+% VP -> IV
+rule(vp(X),[iv(X)]).
+
+% VP -> TV NP
+rule(vp(X^W),[tv(X^Y),np(Y^W)]).
+
+% VP -> DTV NP NP eg: I gave Sue a burger 
+% VP -> DTV NP PP eg: I gave a burger to Sue
+% VP -> VP PP
+% VP -> SV S
+
+% VP -> ADV VP
+
+% VP -> AUX VP
+
+% DT -> NP POS do we need to handle this? POS->s 
+
+
+% S -> NP VP
+rule(s(Y),[np(X^Y),vp(X)]).
+
 
 % ...
 
