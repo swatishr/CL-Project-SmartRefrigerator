@@ -92,8 +92,10 @@ srparse(Stack,[Word|Words]):-
 
 lemma(a,dtexists).
 lemma(an,dtexists).
-lemma(the,dtexists).
 lemma(some,dtexists).
+
+lemma(the,dt).
+lemma(no,dt).
 
 lemma(each,dtforall).
 lemma(all,dtforall).
@@ -201,6 +203,11 @@ lex(dt((X^P)^(X^Q)^exists(X,(and(P,Q)))),Word):-
 
 %lex(X,that).
 lex(rel([]), Word):- lemma(Word,rel).
+
+lex(dt((X^P)^(X^Q)^Z),Word):-
+   lemma(Word,dt),
+    A = and(P,Q),
+    Z =..[Word,X,A].
 
 %lex(X,on)
 %vacp((Y^on(X,Y))^Q^(X^P)^and(P,Q))
