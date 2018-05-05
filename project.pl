@@ -96,6 +96,7 @@ srparse(Stack,[Word|Words]):-
 lemma(a,dtexists).
 lemma(an,dtexists).
 lemma(the,dtexists).
+lemma(some,dtexists).
 
 lemma(each,dtforall).
 lemma(all,dtforall).
@@ -106,8 +107,10 @@ lemma(box,n).
 lemma(banana,n).
 lemma(bowl,n).
 lemma(container,n).
+lemma(egg,n).
 lemma(freezer,n).
 lemma(fridge,n).
+lemma(ham,n).
 lemma(meat,n).
 lemma(milk,n).
 lemma(popsicles,n).
@@ -118,6 +121,7 @@ lemma(watermelon,n).
 lemma(tom,pn).
 lemma(mia,pn).
 lemma(sam,pn).
+lemma(sue,pn).
 
 lemma(almond,adj).
 lemma(empty,adj).
@@ -141,6 +145,7 @@ lemma(drunk,tv).
 lemma(drinks,tv).
 lemma(contain,tv).
 lemma(contains,tv).
+lemma(put,tv).
 
 lemma(has,tv).
 lemma(had,tv).
@@ -152,9 +157,10 @@ lemma(that,rel).
 % lemma(what,rel).
 % lemma(which,rel).
 
-lemma(in,p).
-lemma(under,p).
 lemma(below,p).
+lemma(in,p).
+lemma(inside,p).
+lemma(under,p).
 lemma(on,vacp).
 lemma(to,vacp).
 
@@ -201,6 +207,10 @@ lex(tv(X^Y^Z), Word):-
 
 lex(dt((X^P)^(X^Q)^forall(X,imp(P,Q))),Word):-
 		lemma(Word,dtforall).
+
+lex(pn((P)^X),Word):-
+    lemma(Word,pn),
+    P=..[^,Word,X].
 
 %Last resource is to stem the word
 lex(n(X^P),Lemma):-
