@@ -54,16 +54,12 @@ process([bye|_]):-
 
 parse(Input, SemanticRepresentation):- sr_parse(Input).
 
-%[sr_parse([every,white,container,on,the,bottom,shelf,contains,a,banana])]
-%sr_parse([every,white,container,on,the,bottom,shelf,contains,a,banana]).
-%sr_parse([on,the,bottom,shelf]).
-%sr_parse([a,blue,box,contains,some,ham]).
 sr_parse([]).
 sr_parse(Sentence):-
         srparse([],Sentence).
 
 srparse([X],[]):-
-  %numbervars(X,0,_),
+  numbervars(X,0,_),
   write(X).
 
 srparse([Y,X|MoreStack],Words):-
@@ -109,10 +105,8 @@ lemma(box,n).
 lemma(banana,n).
 lemma(bowl,n).
 lemma(container,n).
-lemma(egg,n).
 lemma(freezer,n).
 lemma(fridge,n).
-lemma(ham,n).
 lemma(meat,n).
 lemma(milk,n).
 lemma(popsicles,n).
@@ -123,7 +117,6 @@ lemma(watermelon,n).
 lemma(tom,pn).
 lemma(mia,pn).
 lemma(sam,pn).
-lemma(sue,pn).
 
 lemma(almond,adj).
 lemma(empty,adj).
@@ -147,7 +140,6 @@ lemma(drunk,tv).
 lemma(drinks,tv).
 lemma(contain,tv).
 lemma(contains,tv).
-lemma(put,tv).
 
 lemma(has,tv).
 lemma(had,tv).
@@ -159,12 +151,13 @@ lemma(that,rel).
 % lemma(what,rel).
 % lemma(which,rel).
 
-lemma(below,p).
 lemma(in,p).
-lemma(inside,p).
 lemma(under,p).
+lemma(below,p).
 lemma(on,vacp).
 lemma(to,vacp).
+
+
 
 lemma(Word,Tag,Stem) :- atom_chars(Word, WordList),
                    lemma(Stem,Tag),
@@ -180,7 +173,14 @@ compare_lemma([W|WordList],[W|LemmaList]) :-
 % --------------------------------------------------------------------
 
 %[every blue container on the top shelf contains a sandwich that has no meat]
-%[every white container on the bottom shelf contains a banana]
+%[every white container on the bottom shelf contains a banana] (works)
+% a,blue,box,contains,ham
+% a,blue,box,contains,some,ham (works)
+% [the,white,box,that,the,freezer,contains,belongs,to,sue]
+% is,there,an,egg,inside,the,blue,box
+% are,there,two,eggs,inside,the,blue,box
+% what,does,the,green,box,contain
+% who,put,every,yellow,box,on,the,white,bowl
 
 %lex(X,tom).
 lex(pn( (P)^X ),Word):-
@@ -192,12 +192,15 @@ lex(adj((X^P)^X^and(P,Q)),Word):-
   	lemma(Word,adj),
     Q =.. [Word,X].
 
+%rc(), n(_4686^meat(_4686))
+
+
 %lex(X,the).
 lex(dt((X^P)^(X^Q)^exists(X,(and(P,Q)))),Word):-
   	lemma(Word,dtexists).
 
 %lex(X,that).
-lex(rc([]), Word):- lemma(Word,rel).
+lex(rel([]), Word):- lemma(Word,rel).
 
 %lex(X,on)
 %vacp((Y^on(X,Y))^Q^(X^P)^and(P,Q))
@@ -212,10 +215,6 @@ lex(tv(X^Y^Z), Word):-
 
 lex(dt((X^P)^(X^Q)^forall(X,imp(P,Q))),Word):-
 		lemma(Word,dtforall).
-
-lex(pn((P)^X),Word):-
-    lemma(Word,pn),
-    P=..[^,Word,X].
 
 %Last resource is to stem the word
 lex(n(X^P),Lemma):-
@@ -235,8 +234,10 @@ lex(n(X^P),Lemma):-
 % rule(+LHS,+ListOfRHS)
 % --------------------------------------------------------------------
 
+rule(rc(X^W,[]),[rel([]),vp(X^W)]).
 
 rule(n(X^and(Y,Z)),[n(X^Y),rc(X^Z,[])]).
+
 % NP -> DT N
 rule(np(Y),[dt(X^Y),n(X)]).
 % N -> N PP
@@ -260,12 +261,18 @@ rule(pp(Z),[vacp(X^Y^Z),np(X^Y)]).
 rule(vp(X),[iv(X)]).
 % VP -> TV NP
 rule(vp(X^W),[tv(X^Y),np(Y^W)]).
+
+% NP ->N
+rule(np(X),[n(X)]).
+
+%rule(vp(X^W),[tv(X^Y),n(Y^W)]).
+
 % VP -> DTV NP NP eg: I gave Sue a burger
 % VP -> DTV NP PP eg: I gave a burger to Sue
 % VP -> VP PP eg: The top shelf contains eggs in a box
-% VP -> SV S eg: 
+% VP -> SV S eg:
 % VP -> ADV VP eg:
-% VP -> AUX VP eg: 
+% VP -> AUX VP eg:
 % DT -> NP POS do we need to handle this? POS->s eg: The upper shelf contains Sam's box
 % S -> NP VP eg: The white container contains egg
 rule(s(Y),[np(X^Y),vp(X)]).
