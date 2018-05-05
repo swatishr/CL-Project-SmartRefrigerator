@@ -52,8 +52,30 @@ process([bye|_]):-
 % 3. Obtain FOL representation for input sentence
 % ===========================================================
 
-parse(Input, SemanticRepresentation):- write(Input).
-% ...
+parse(Input, SemanticRepresentation):- sr_parse(Input).
+
+%[sr_parse([every,white,container,on,the,bottom,shelf,contains,a,banana])]
+%sr_parse([every,white,container,on,the,bottom,shelf,contains,a,banana]).
+%sr_parse([on,the,bottom,shelf]).
+sr_parse([]).
+sr_parse(Sentence):-
+        srparse([],Sentence).
+
+srparse([X],[]):-
+  numbervars(X,0,_),
+  write(X).
+
+srparse([Y,X|MoreStack],Words):-
+       rule(LHS,[X,Y]),
+       srparse([LHS|MoreStack],Words).
+
+srparse([X|MoreStack],Words):-
+       rule(LHS,[X]),
+       srparse([LHS|MoreStack],Words).
+
+srparse(Stack,[Word|Words]):-
+        lex(X,Word),
+        srparse([X|Stack],Words).
 
 
 % ===========================================================
@@ -118,8 +140,17 @@ lemma(drank,tv).
 lemma(drunk,tv).
 lemma(drinks,tv).
 lemma(contain,tv).
+lemma(contains,tv).
+
 lemma(has,tv).
+lemma(had,tv).
 lemma(have,tv).
+
+lemma(that,rel).
+% WH questions vs REL, how to figure ambiguity/
+% lemma(who,rel).
+% lemma(what,rel).
+% lemma(which,rel).
 
 lemma(in,p).
 lemma(under,p).
@@ -148,11 +179,14 @@ lex(adj((X^P)^X^and(P,Q)),Word):-
   	lemma(Word,adj),
     Q =.. [Word,X].
 
-%lex(X,the)
+%lex(X,the).
 lex(dt( (X^P)^(X^Q)^Z),Word):-
   	lemma(Word,dtexists),
     A = and(P,Q),
     Z =..[Word,X,A].
+
+%lex(X,that).
+lex(rc([]), Word):- lemma(Word,rel).
 
 %lex(X,on)
 %vacp((Y^on(X,Y))^Q^(X^P)^and(P,Q))
@@ -161,12 +195,17 @@ lex(vacp((Y^Z)^Q^(X^P)^and(P,Q)),Word) :-
   lemma(Word,vacp),
   Z =.. [Word,X,Y].
 
-lex(n(X^P),Lemma):-
-	lemma(Lemma,n,Stem),
-	P=.. [Stem,X].
+lex(tv(X^Y^Z), Word):-
+      lemma(Word,tv),
+      Z =..[Word,X,Y].
 
 lex(dt((X^P)^(X^Q)^forall(X,imp(P,Q))),Word):-
 		lemma(Word,dtforall).
+
+%Last resource is to stem the word
+lex(n(X^P),Lemma):-
+	lemma(Lemma,n,Stem),
+	P=.. [Stem,X].
 
 % ...
 
@@ -181,10 +220,15 @@ lex(dt((X^P)^(X^Q)^forall(X,imp(P,Q))),Word):-
 % rule(+LHS,+ListOfRHS)
 % --------------------------------------------------------------------
 
+
+rule(n(X^and(Y,Z)),[n(X^Y),rc(X^Z,[])]).
 % NP -> DT N
 rule(np(Y),[dt(X^Y),n(X)]).
 % N -> N PP
 rule(n(X^Z),[n(X^Y),pp((X^Y)^Z)]).
+%NP -> NP PP
+rule(np(Z),[np(X^Y),pp((X^Y)^Z)]).
+
 % N -> Adj N
 rule(n(Y),[adj(X^Y),n(X)]).
 % NP -> PN
@@ -193,6 +237,10 @@ rule(np(X),[pn(X)]).
 rule(np(X),[prp(X)]).
 % PP -> P NP
 rule(pp(Z),[p(X^Y^Z),np(X^Y)]).
+
+% PP -> vacp NP
+rule(pp(Z),[vacp(X^Y^Z),np(X^Y)]).
+
 % VP -> IV
 rule(vp(X),[iv(X)]).
 % VP -> TV NP
@@ -206,6 +254,8 @@ rule(vp(X^W),[tv(X^Y),np(Y^W)]).
 % DT -> NP POS do we need to handle this? POS->s eg: The upper shelf contains Sam's box
 % S -> NP VP eg: The white container contains egg
 rule(s(Y),[np(X^Y),vp(X)]).
+
+
 % ...
 
 
