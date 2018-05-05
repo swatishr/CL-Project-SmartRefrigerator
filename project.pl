@@ -57,12 +57,13 @@ parse(Input, SemanticRepresentation):- sr_parse(Input).
 %[sr_parse([every,white,container,on,the,bottom,shelf,contains,a,banana])]
 %sr_parse([every,white,container,on,the,bottom,shelf,contains,a,banana]).
 %sr_parse([on,the,bottom,shelf]).
+%sr_parse([a,blue,box,contains,some,ham]).
 sr_parse([]).
 sr_parse(Sentence):-
         srparse([],Sentence).
 
 srparse([X],[]):-
-  numbervars(X,0,_),
+  %numbervars(X,0,_),
   write(X).
 
 srparse([Y,X|MoreStack],Words):-
@@ -96,11 +97,13 @@ srparse(Stack,[Word|Words]):-
 lemma(a,dtexists).
 lemma(an,dtexists).
 lemma(the,dtexists).
+lemma(some,dtexists).
 
 lemma(each,dtforall).
 lemma(all,dtforall).
 lemma(every,dtforall).
 
+lemma(ham,n).
 lemma(almond,n).
 lemma(box,n).
 lemma(banana,n).
@@ -174,16 +177,19 @@ compare_lemma([W|WordList],[W|LemmaList]) :-
 %[every blue container on the top shelf contains a sandwich that has no meat]
 %[every white container on the bottom shelf contains a banana]
 
+%lex(X,tom).
+lex(pn( (P)^X ),Word):-
+    lemma(Word,pn),
+    P=..[^,Word,X].
+
 %lex(X,blue)
 lex(adj((X^P)^X^and(P,Q)),Word):-
   	lemma(Word,adj),
     Q =.. [Word,X].
 
 %lex(X,the).
-lex(dt( (X^P)^(X^Q)^Z),Word):-
-  	lemma(Word,dtexists),
-    A = and(P,Q),
-    Z =..[Word,X,A].
+lex(dt((X^P)^(X^Q)^exists(X,(and(P,Q)))),Word):-
+  	lemma(Word,dtexists).
 
 %lex(X,that).
 lex(rc([]), Word):- lemma(Word,rel).
