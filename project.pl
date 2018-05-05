@@ -239,6 +239,8 @@ lex(n(X^P),Lemma):-
 rule(n(X^and(Y,Z)),[n(X^Y),rc(X^Z,[])]).
 % NP -> DT N
 rule(np(Y),[dt(X^Y),n(X)]).
+% NP ->N
+rule(np(X),[n(X)]).
 % N -> N PP
 rule(n(X^Z),[n(X^Y),pp((X^Y)^Z)]).
 %NP -> NP PP
@@ -313,3 +315,6 @@ respond(Evaluation) :-
 
 % wh-interrogative false in the model
 % ...
+
+s(forall(A,imp(and(and(container(A),blue(A)),exists(B,and(and(shelf(B),top(B)),on(A,B)))),
+and(exists(C,and(sandwich(C),contains(A,C))),meat(D^has(C^contains(A,C),D))))))
