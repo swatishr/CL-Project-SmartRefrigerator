@@ -165,8 +165,6 @@ lex(n(X^P),Lemma):-
 	lemma(Lemma,n,Stem),
 	P=.. [Stem,X].
 
-
-
 lex(dt((X^P)^(X^Q)^forall(X,imp(P,Q))),Word):-
 		lemma(Word,dtforall).
 
@@ -201,12 +199,12 @@ rule(vp(X),[iv(X)]).
 rule(vp(X^W),[tv(X^Y),np(Y^W)]).
 % VP -> DTV NP NP eg: I gave Sue a burger
 % VP -> DTV NP PP eg: I gave a burger to Sue
-% VP -> VP PP
-% VP -> SV S
-% VP -> ADV VP
-% VP -> AUX VP
-% DT -> NP POS do we need to handle this? POS->s
-% S -> NP VP
+% VP -> VP PP eg: The top shelf contains eggs in a box
+% VP -> SV S eg: 
+% VP -> ADV VP eg:
+% VP -> AUX VP eg: 
+% DT -> NP POS do we need to handle this? POS->s eg: The upper shelf contains Sam's box
+% S -> NP VP eg: The white container contains egg
 rule(s(Y),[np(X^Y),vp(X)]).
 % ...
 
