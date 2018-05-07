@@ -111,6 +111,7 @@ lemma(box,n).
 lemma(banana,n).
 lemma(bowl,n).
 lemma(container,n).
+lemma(egg,n).
 lemma(freezer,n).
 lemma(fridge,n).
 lemma(meat,n).
@@ -145,13 +146,16 @@ lemma(drank,tv).
 lemma(drunk,tv).
 lemma(drinks,tv).
 lemma(contain,tv).
-lemma(contains,tv).
+%lemma(contains,tv).
 
 lemma(has,tv).
 lemma(had,tv).
 lemma(have,tv).
 
 lemma(did,aux).
+lemma(does,aux).
+
+lemma(put,dtv).
 
 lemma(that,rel).
 % WH questions vs REL, how to figure ambiguity/
@@ -225,9 +229,13 @@ lex(vacp((Y^Z)^Q^(X^P)^and(P,Q)),Word) :-
   lemma(Word,vacp),
   Z =.. [Word,X,Y].
 
-lex(tv(X^Y^Z,[]), Word):-
-      lemma(Word,tv),
-      Z =..[Word,X,Y].
+%lex(tv(X^Y^Z,[]), Word):-
+%      lemma(Word,tv),
+%      Z =..[Word,X,Y].
+
+%lex(n(X^P),Word):-
+%	lemma(Word,n),
+%	P=.. [Word,X].
 
 lex(X, Word):-
       lemma(Word,aux),
@@ -239,6 +247,12 @@ lex(dt((X^P)^(X^Q)^forall(X,imp(P,Q))),Word):-
 		lemma(Word,dtforall).
 
 %Last resource is to stem the word
+%Stemming for verb
+lex(tv(X^Y^Z,[]), Lemma):-
+      lemma(Lemma,tv,Stem),
+      Z =..[Stem,X,Y].
+
+%Stemming for noun
 lex(n(X^P),Lemma):-
 	lemma(Lemma,n,Stem),
 	P=.. [Stem,X].
@@ -256,6 +270,7 @@ lex(n(X^P),Lemma):-
 % rule(+LHS,+ListOfRHS)
 % --------------------------------------------------------------------
 
+%RC -> REL VP
 rule(rc(X,[]),[rel([]),vp(X,[])]).
 
 rule(n(X^and(Y,Z)),[n(X^Y),rc(Z,[X])]).
@@ -270,7 +285,6 @@ rule(np(X),[n(X)]).
 rule(n(X^Z),[n(X^Y),pp((X^Y)^Z)]).
 %NP -> NP PP
 rule(np(Z),[np(X^Y),pp((X^Y)^Z)]).
-
 % N -> Adj N
 rule(n(Y),[adj(X^Y),n(X)]).
 % NP -> PN
@@ -279,20 +293,15 @@ rule(np(X),[pn(X)]).
 rule(np(X),[prp(X)]).
 % PP -> P NP
 rule(pp(Z),[p(X^Y^Z),np(X^Y)]).
-
 % PP -> vacp NP
 rule(pp(Z),[vacp(X^Y^Z),np(X^Y)]).
-
 % VP -> IV
 rule(vp(X,[]),[iv(X)]).
 % VP -> TV NP
 %rule(vp(X^W),[tv(X^Y),np(Y^W)]).
 rule(vp(X^K,[]),[tv(X^Y,[]),np(Y^K)]).
-
 % NP ->N
 rule(np(X),[n(X)]).
-
-
 
 %New Question rules
 rule(vp(K,[WH]),[tv(Y,[WH]),np(Y^K)]).
@@ -302,17 +311,23 @@ rule(s(X,[WH]),[vp(X,[WH])]).
 rule(Y,[whpr(X^Y),vp(X,[])]).
 rule(ynq(Y),[aux, np(X^Y),vp(X,[])]).
 rule(Z,[whpr((X^Y)^Z), inv_s(Y,[X])]).
+
+%S -> AUX NP VP
 rule(inv_s(Y,[WH]),[aux, np(X^Y),vp(X,[WH])]).
 
 %rule(vp(X^W),[tv(X^Y),n(Y^W)]).
 
 % VP -> DTV NP NP eg: I gave Sue a burger
-% VP -> DTV NP PP eg: I gave a burger to Sue
+
+% VP -> DTV NP PP eg: sam put every yellow box on the white bowl
+rule(vp(X^W),[dtv(X^(Y^Z)),np(Y^Z),pp(Z^W)]).
+
 % VP -> VP PP eg: The top shelf contains eggs in a box
 % VP -> SV S eg:
 % VP -> ADV VP eg:
 % VP -> AUX VP eg:
 % DT -> NP POS do we need to handle this? POS->s eg: The upper shelf contains Sam's box
+
 % S -> NP VP eg: The white container contains egg
 rule(s(Y),[np(X^Y),vp(X,_)]).
 
@@ -359,5 +374,5 @@ respond(Evaluation) :-
 % wh-interrogative false in the model
 % ...
 
-s(forall(A,imp(and(and(container(A),blue(A)),exists(B,and(and(shelf(B),top(B)),on(A,B)))),
-and(exists(C,and(sandwich(C),contains(A,C))),meat(D^has(C^contains(A,C),D))))))
+%s(forall(A,imp(and(and(container(A),blue(A)),exists(B,and(and(shelf(B),top(B)),on(A,B)))),
+%and(exists(C,and(sandwich(C),contains(A,C))),meat(D^has(C^contains(A,C),D)))))).
