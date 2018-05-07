@@ -105,6 +105,7 @@ lemma(each,dtforall).
 lemma(all,dtforall).
 lemma(every,dtforall).
 
+lemma(burger,n).
 lemma(ham,n).
 lemma(almond,n).
 lemma(box,n).
@@ -156,6 +157,7 @@ lemma(did,aux).
 lemma(does,aux).
 
 lemma(put,dtv).
+lemma(puts,dtv).
 
 lemma(that,rel).
 % WH questions vs REL, how to figure ambiguity/
@@ -211,6 +213,9 @@ lex(adj((X^P)^X^and(P,Q)),Word):-
 
 
 %lex(X,the).
+%sr_parse([tom,put,a,box,on,the,bowl])
+
+
 lex(dt((X^P)^(X^Q)^exists(X,(and(P,Q)))),Word):-
   	lemma(Word,dtexists).
 
@@ -252,12 +257,18 @@ lex(tv(X^Y^Z,[]), Lemma):-
       lemma(Lemma,tv,Stem),
       Z =..[Stem,X,Y].
 
+lex(dtv(W^X^Y^Z,[]), Lemma):-
+      lemma(Lemma,dtv,Stem),
+      Z =..[Stem,W,X,Y].
+
 %Stemming for noun
+%lex(X,egg)
 lex(n(X^P),Lemma):-
 	lemma(Lemma,n,Stem),
 	P=.. [Stem,X].
 
-% ...
+
+% (X^Q)^exists(X,and(egg(X),Q))
 
 % --------------------------------------------------------------------
 % Suffix types
@@ -280,7 +291,8 @@ rule(n(X^and(Y,Z)),[n(X^Y),rc(X^Z,[])]).
 % NP -> DT N
 rule(np(Y),[dt(X^Y),n(X)]).
 % NP ->N
-rule(np(X),[n(X)]).
+rule(np(X),[n(Y)]):- lex(A,some),rule(np(X),[A, n(Y)]),!.
+
 % N -> N PP
 rule(n(X^Z),[n(X^Y),pp((X^Y)^Z)]).
 %NP -> NP PP
@@ -300,8 +312,9 @@ rule(vp(X,[]),[iv(X)]).
 % VP -> TV NP
 %rule(vp(X^W),[tv(X^Y),np(Y^W)]).
 rule(vp(X^K,[]),[tv(X^Y,[]),np(Y^K)]).
-% NP ->N
-rule(np(X),[n(X)]).
+
+% TV -> IV
+%rule(iv(Y,[X]),[tv(X^Y,[])]).
 
 %New Question rules
 rule(vp(K,[WH]),[tv(Y,[WH]),np(Y^K)]).
@@ -320,7 +333,22 @@ rule(inv_s(Y,[WH]),[aux, np(X^Y),vp(X,[WH])]).
 % VP -> DTV NP NP eg: I gave Sue a burger
 
 % VP -> DTV NP PP eg: sam put every yellow box on the white bowl
-rule(vp(X^W),[dtv(X^(Y^Z)),np(Y^Z),pp(Z^W)]).
+
+% sr_parse([tom,put,a,box,on,the,bowl])
+
+%lex(W,tom), lex(X,eat), lex(Y,a), lex(Z,burger).
+
+% dtv(W^X^Y^ put(W,X,Y), []).
+%
+% np((A^B)^ exists(A,and(box(A),B)) )
+%
+% pp((A^B)^ and(B,the(C,and(bowl(C),on(A,C)))) )
+%
+% np(X^Y),pp((X^Y)^Z)
+%
+% np(and(the(A,and(box(A),B)),the(C,and(bowl(C),on(A^B,C)))))
+
+%rule(vp(W^Z),[dtv(W^X^Y),np(X^Y),pp((X^Y)^Z)]).
 
 % VP -> VP PP eg: The top shelf contains eggs in a box
 % VP -> SV S eg:
@@ -329,9 +357,6 @@ rule(vp(X^W),[dtv(X^(Y^Z)),np(Y^Z),pp(Z^W)]).
 % DT -> NP POS do we need to handle this? POS->s eg: The upper shelf contains Sam's box
 
 % S -> NP VP eg: The white container contains egg
-rule(s(Y),[np(X^Y),vp(X,_)]).
-
-% ...
 
 
 % ===========================================================
@@ -342,6 +367,7 @@ rule(s(Y),[np(X^Y),vp(X,_)]).
 % ===========================================================
 
 % model(...,...)
+rule(s(Y),[np(X^Y),vp(X,_)]).
 
 % ===========================================================
 %  Respond
