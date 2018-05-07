@@ -62,6 +62,10 @@ srparse([X],[]):-
   numbervars(X,0,_),
   write(X).
 
+srparse([Z,Y,X|MoreStack],Words):-
+       rule(LHS,[X,Y,Z]),
+       srparse([LHS|MoreStack],Words).
+
 srparse([Y,X|MoreStack],Words):-
        rule(LHS,[X,Y]),
        srparse([LHS|MoreStack],Words).
@@ -92,8 +96,10 @@ srparse(Stack,[Word|Words]):-
 
 lemma(a,dtexists).
 lemma(an,dtexists).
-lemma(the,dtexists).
 lemma(some,dtexists).
+
+lemma(the,dt).
+lemma(no,dt).
 
 lemma(each,dtforall).
 lemma(all,dtforall).
@@ -145,6 +151,8 @@ lemma(has,tv).
 lemma(had,tv).
 lemma(have,tv).
 
+lemma(did,aux).
+
 lemma(that,rel).
 % WH questions vs REL, how to figure ambiguity/
 % lemma(who,rel).
@@ -157,6 +165,9 @@ lemma(below,p).
 lemma(on,vacp).
 lemma(to,vacp).
 
+lemma(who,whpr).
+lemma(which,whpr).
+lemma(what,whpr).
 
 
 lemma(Word,Tag,Stem) :- atom_chars(Word, WordList),
@@ -202,6 +213,11 @@ lex(dt((X^P)^(X^Q)^exists(X,(and(P,Q)))),Word):-
 %lex(X,that).
 lex(rel([]), Word):- lemma(Word,rel).
 
+lex(dt((X^P)^(X^Q)^Z),Word):-
+   lemma(Word,dt),
+    A = and(P,Q),
+    Z =..[Word,X,A].
+
 %lex(X,on)
 %vacp((Y^on(X,Y))^Q^(X^P)^and(P,Q))
 %vacp((Y^on(X,Y))^Q^(X^P)^and(P,Q))
@@ -209,9 +225,15 @@ lex(vacp((Y^Z)^Q^(X^P)^and(P,Q)),Word) :-
   lemma(Word,vacp),
   Z =.. [Word,X,Y].
 
-lex(tv(X^Y^Z), Word):-
+lex(tv(X^Y^Z,[]), Word):-
       lemma(Word,tv),
       Z =..[Word,X,Y].
+
+lex(X, Word):-
+      lemma(Word,aux),
+      X = aux.
+
+lex(whpr(X^P),Word) :- lemma(Word,whpr), P=..[Word,X].
 
 lex(dt((X^P)^(X^Q)^forall(X,imp(P,Q))),Word):-
 		lemma(Word,dtforall).
@@ -234,9 +256,11 @@ lex(n(X^P),Lemma):-
 % rule(+LHS,+ListOfRHS)
 % --------------------------------------------------------------------
 
-rule(rc(X^W,[]),[rel([]),vp(X^W)]).
+rule(rc(X,[]),[rel([]),vp(X,[])]).
 
+rule(n(X^and(Y,Z)),[n(X^Y),rc(Z,[X])]).
 rule(n(X^and(Y,Z)),[n(X^Y),rc(X^Z,[])]).
+%rule(n(X^and(Y,Z)),[n(X^Y),rc(X^Z,[])]).
 
 % NP -> DT N
 rule(np(Y),[dt(X^Y),n(X)]).
@@ -260,12 +284,25 @@ rule(pp(Z),[p(X^Y^Z),np(X^Y)]).
 rule(pp(Z),[vacp(X^Y^Z),np(X^Y)]).
 
 % VP -> IV
-rule(vp(X),[iv(X)]).
+rule(vp(X,[]),[iv(X)]).
 % VP -> TV NP
-rule(vp(X^W),[tv(X^Y),np(Y^W)]).
+%rule(vp(X^W),[tv(X^Y),np(Y^W)]).
+rule(vp(X^K,[]),[tv(X^Y,[]),np(Y^K)]).
 
 % NP ->N
 rule(np(X),[n(X)]).
+
+
+
+%New Question rules
+rule(vp(K,[WH]),[tv(Y,[WH]),np(Y^K)]).
+rule(s(X,[WH]),[vp(X,[WH])]).
+
+% WH QUESTIONS rules
+rule(Y,[whpr(X^Y),vp(X,[])]).
+rule(ynq(Y),[aux, np(X^Y),vp(X,[])]).
+rule(Z,[whpr((X^Y)^Z), inv_s(Y,[X])]).
+rule(inv_s(Y,[WH]),[aux, np(X^Y),vp(X,[WH])]).
 
 %rule(vp(X^W),[tv(X^Y),n(Y^W)]).
 
@@ -277,8 +314,7 @@ rule(np(X),[n(X)]).
 % VP -> AUX VP eg:
 % DT -> NP POS do we need to handle this? POS->s eg: The upper shelf contains Sam's box
 % S -> NP VP eg: The white container contains egg
-rule(s(Y),[np(X^Y),vp(X)]).
-
+rule(s(Y),[np(X^Y),vp(X,_)]).
 
 % ...
 
