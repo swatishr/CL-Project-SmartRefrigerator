@@ -228,11 +228,12 @@ lex(dt((X^P)^(X^Q)^Z),Word):-
     Z =..[Word,X,A].
 
 %lex(X,on)
-%vacp((Y^on(X,Y))^Q^(X^P)^and(P,Q))
-%vacp((Y^on(X,Y))^Q^(X^P)^and(P,Q))
-lex(vacp((Y^Z)^Q^(X^P)^and(P,Q)),Word) :-
-  lemma(Word,vacp),
-  Z =.. [Word,X,Y].
+
+lex(vacp([]),Word) :-
+  lemma(Word,vacp).
+% lex(vacp((Y^Z)^Q^(X^P)^and(P,Q)),Word) :-
+%   lemma(Word,vacp),
+%   Z =.. [Word,X,Y].
 
 %lex(tv(X^Y^Z,[]), Word):-
 %      lemma(Word,tv),
@@ -257,7 +258,7 @@ lex(tv(X^Y^Z,[]), Lemma):-
       lemma(Lemma,tv,Stem),
       Z =..[Stem,X,Y].
 
-lex(dtv(W^X^Y^Z,[]), Lemma):-
+lex(dtv(W^(X^Y)^Z,[]), Lemma):-
       lemma(Lemma,dtv,Stem),
       Z =..[Stem,W,X,Y].
 
@@ -281,12 +282,29 @@ lex(n(X^P),Lemma):-
 % rule(+LHS,+ListOfRHS)
 % --------------------------------------------------------------------
 
+
+%sr_parse([tom,put,a,box,on,the,bowl])
+% lex(A,tom), lex(B,put),
+% lex(C,a), lex(D,box),
+% lex(E,on), lex(F,the), lex(G,bowl),
+% rule(H,[A]), rule(I,[C,D]), rule(J,[F,G]), rule(K,[E,J]),
+% rule(X,[B,I,K])., rule(S,[H,X]).
+
+% B = dtv(A^ (F^G) ^put(A, F, G), []),
+% I = np(    (F^G) ^exists(F, and(box(F), G)) ),
+% K = pp(    (F^G) ^the(F, and(bowl(F), G)))
+
+rule(vp(X^Z^C,[]),[dtv(X^A^C,[]),np(A),pp(A^Z)]).
+
+%rule(vp(X^K,[]),[tv(X^Y,[]),np(Y^K)]).
+%np(X^Y),pp((X^Y)^Z)
+
 %RC -> REL VP
 rule(rc(X,[]),[rel([]),vp(X,[])]).
 
 rule(n(X^and(Y,Z)),[n(X^Y),rc(Z,[X])]).
 rule(n(X^and(Y,Z)),[n(X^Y),rc(X^Z,[])]).
-%rule(n(X^and(Y,Z)),[n(X^Y),rc(X^Z,[])]).
+
 
 % NP -> DT N
 rule(np(Y),[dt(X^Y),n(X)]).
@@ -306,7 +324,7 @@ rule(np(X),[prp(X)]).
 % PP -> P NP
 rule(pp(Z),[p(X^Y^Z),np(X^Y)]).
 % PP -> vacp NP
-rule(pp(Z),[vacp(X^Y^Z),np(X^Y)]).
+rule(pp(X^Y),[vacp([]),np(X^Y)]).
 % VP -> IV
 rule(vp(X,[]),[iv(X)]).
 % VP -> TV NP
@@ -338,17 +356,12 @@ rule(inv_s(Y,[WH]),[aux, np(X^Y),vp(X,[WH])]).
 
 %lex(W,tom), lex(X,eat), lex(Y,a), lex(Z,burger).
 
-% dtv(W^X^Y^ put(W,X,Y), []).
-%
-% np((A^B)^ exists(A,and(box(A),B)) )
-%
-% pp((A^B)^ and(B,the(C,and(bowl(C),on(A,C)))) )
-%
-% np(X^Y),pp((X^Y)^Z)
-%
-% np(and(the(A,and(box(A),B)),the(C,and(bowl(C),on(A^B,C)))))
+% dtv(W^A^B^ put(W,X,Y), []).
+% np( (A^B) ^the(A,and(burger(A),B)))
+% pp( (A^B) ^ and(B,the(C,and(and(box(C),white(C)),on(A,C)))) )
 
-%rule(vp(W^Z),[dtv(W^X^Y),np(X^Y),pp((X^Y)^Z)]).
+
+
 
 % VP -> VP PP eg: The top shelf contains eggs in a box
 % VP -> SV S eg:
