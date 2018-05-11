@@ -129,6 +129,7 @@ lemma(sam,pn).
 lemma(almond,adj).
 lemma(empty,adj).
 lemma(red,adj).
+lemma(green,adj).
 lemma(blue,adj).
 lemma(white,adj).
 lemma(top,adj).
@@ -147,7 +148,6 @@ lemma(drank,tv).
 lemma(drunk,tv).
 lemma(drinks,tv).
 lemma(contain,tv).
-%lemma(contains,tv).
 
 lemma(has,tv).
 lemma(had,tv).
@@ -211,8 +211,10 @@ lex(adj((X^P)^X^and(P,Q)),Word):-
 
 %rc(), n(_4686^meat(_4686))
 
+%sr_parse([what,does,the,green,box,contain])
+%lex(A,what), lex(B,does),lex(C,the), lex(D,green), lex(E,box), lex(F,contain),
+%rule(P,[D,E]), rule(Q,[C,P]), rule(R,[F]), rule(S,[R]).
 
-%lex(X,the).
 %sr_parse([tom,put,a,box,on,the,bowl])
 
 
@@ -247,7 +249,7 @@ lex(X, Word):-
       lemma(Word,aux),
       X = aux.
 
-lex(whpr(X^P),Word) :- lemma(Word,whpr), P=..[Word,X].
+lex(whpr((X^Y)^P),Word) :- lemma(Word,whpr), P=..[Word,X,Y].
 
 lex(dt((X^P)^(X^Q)^forall(X,imp(P,Q))),Word):-
 		lemma(Word,dtforall).
@@ -256,9 +258,9 @@ lex(dt((X^P)^(X^Q)^forall(X,imp(P,Q))),Word):-
 %Stemming for verb
 lex(tv(X^Y^Z,[]), Lemma):-
       lemma(Lemma,tv,Stem),
-      Z =..[Stem,X,Y].
+      Z =..[Stem,Y,X].
 
-lex(dtv(W^(X^Y)^Z,[]), Lemma):-
+lex(dtv(W^X^Y^Z,[]), Lemma):-
       lemma(Lemma,dtv,Stem),
       Z =..[Stem,W,X,Y].
 
@@ -290,11 +292,11 @@ lex(n(X^P),Lemma):-
 % rule(H,[A]), rule(I,[C,D]), rule(J,[F,G]), rule(K,[E,J]),
 % rule(X,[B,I,K])., rule(S,[H,X]).
 
-% B = dtv(A^ (F^G) ^put(A, F, G), []),
+% B = dtv(A^F^G^put(A, F, G), []),
 % I = np(    (F^G) ^exists(F, and(box(F), G)) ),
 % K = pp(    (F^G) ^the(F, and(bowl(F), G)))
 
-rule(vp(X^Z^C,[]),[dtv(X^A^C,[]),np(A),pp(A^Z)]).
+rule(vp(X^K,[]),[dtv(X^A^K,[]),np(A),pp(A^C)]).
 
 %rule(vp(X^K,[]),[tv(X^Y,[]),np(Y^K)]).
 %np(X^Y),pp((X^Y)^Z)
@@ -326,25 +328,30 @@ rule(pp(Z),[p(X^Y^Z),np(X^Y)]).
 % PP -> vacp NP
 rule(pp(X^Y),[vacp([]),np(X^Y)]).
 % VP -> IV
-rule(vp(X,[]),[iv(X)]).
+rule(vp(X,[]),[iv(X,[])]).
 % VP -> TV NP
 %rule(vp(X^W),[tv(X^Y),np(Y^W)]).
 rule(vp(X^K,[]),[tv(X^Y,[]),np(Y^K)]).
 
-% TV -> IV
-%rule(iv(Y,[X]),[tv(X^Y,[])]).
+
+% IV -> TV
+rule(iv(Y,[X]),[tv(X^Y,[])]).
+
 
 %New Question rules
 rule(vp(K,[WH]),[tv(Y,[WH]),np(Y^K)]).
+rule(vp(X,WH),[iv(X,WH)]).
 rule(s(X,[WH]),[vp(X,[WH])]).
 
 % WH QUESTIONS rules
 rule(Y,[whpr(X^Y),vp(X,[])]).
 rule(ynq(Y),[aux, np(X^Y),vp(X,[])]).
 rule(Z,[whpr((X^Y)^Z), inv_s(Y,[X])]).
-
 %S -> AUX NP VP
 rule(inv_s(Y,[WH]),[aux, np(X^Y),vp(X,[WH])]).
+
+%Transform What into Q
+rule(q(A,and(thing(A),X)),[what(A,X)]).
 
 %rule(vp(X^W),[tv(X^Y),n(Y^W)]).
 
