@@ -59,7 +59,7 @@ sr_parse(Sentence,SemanticRepresentation):-
         srparse([],Sentence,SemanticRepresentation).
 
 srparse([X],[],SemanticRepresentation):-
-  %numbervars(X,0,_),
+  numbervars(X,0,_),
   SemanticRepresentation = X.
   %write(X).
 
@@ -95,8 +95,13 @@ lemma(a,dtexists).
 lemma(an,dtexists).
 lemma(some,dtexists).
 
+%lemma(the,dt).
+%lemma(no,dt).
+
 lemma(the,dt).
-lemma(no,dt).
+lemma(no,dtnot).
+
+lemma(not,vnot).
 
 lemma(each,dtforall).
 lemma(all,dtforall).
@@ -138,6 +143,9 @@ lemma(bottom,adj).
 lemma(middle,adj).
 lemma(yellow,adj).
 
+lemma(one,num).
+lemma(two,num).
+
 lemma(is,be).
 lemma(was,be).
 lemma(are,be).
@@ -174,6 +182,7 @@ lemma(in,p).
 lemma(under,p).
 lemma(below,p).
 lemma(inside,p).
+lemma(on,p).
 
 lemma(on,vacp).
 lemma(to,vacp).
@@ -218,6 +227,11 @@ lex(adj((X^P)^X^and(P,Q)),Word):-
     lemma(Word,adj),
     Q =.. [Word,X].
 
+%lex(X,two)
+lex(num((X^P)^X^and(P,Q)),Word):-
+    lemma(Word,num),
+    Q =.. [Word,X].
+
 %rc(), n(_4686^meat(_4686))
 
 %sr_parse([what,does,the,green,box,contain])
@@ -238,6 +252,9 @@ lex(dt((X^P)^(X^Q)^Z),Word):-
    lemma(Word,dt),
     A = and(P,Q),
     Z =..[Word,X,A].
+
+lex(dtnot((X^P)^(X^Q)^not(X,(and(P,Q)))),Word):-
+   lemma(Word,dtnot).
 
 %lex(X,on)
 
@@ -340,6 +357,10 @@ rule(n(X^and(Y,Z)),[n(X^Y),rc(X^Z,[])]).
 
 % NP -> DT N
 rule(np(Y),[dt(X^Y),n(X)]).
+
+% NP -> No N
+rule(np(Y),[dtnot(X^Y),n(X)]).
+
 % NP ->N
 rule(np((X^Q)^exists(X,and(P,Q))),[n(X^P)]).
 
@@ -347,6 +368,8 @@ rule(np((X^Q)^exists(X,and(P,Q))),[n(X^P)]).
 rule(n(X^Z),[n(X^Y),pp((X^Y)^Z)]).
 % N -> Adj N
 rule(n(Y),[adj(X^Y),n(X)]).
+% N -> Num N
+rule(n(Y),[num(X^Y),n(X)]).
 
 %rule(n(X),[vacp([]),n(X)]).
 
@@ -399,9 +422,9 @@ rule(Z,[whpr((X^Y)^Z), n(X^P), inv_s(Y,[X])]).
 rule(inv_s(Y,[WH]),[aux, np(X^Y),vp(X,[WH])]).
 
 %Transform What into Q
-rule(q(A,and(thing(A),X)),[what(A,X)]).
-rule(q(A,and(person(A),X)),[who(A,X)]).
-rule(q(A,and(thing(A),X)),[which(A,X)]).
+rule(q(exists(A,and(thing(A),X))),[what(A,X)]).
+rule(q(exists(A,and(person(A),X))),[who(A,X)]).
+rule(q(exists(A,and(thing(A),X))),[which(A,X)]).
 
 %rule(q(A,and(thing(A),X)),[who(A,rely(john,B))]).
 
@@ -436,7 +459,17 @@ rule(s(Y),[np(X^Y),vp(X,_)]).
 % ===========================================================
 
 % model(...,...)
-model([a,b,c,d,e,f,g],[[box,[a,c]],[blue,[a,r]],[milk,[d]],[almond,[d]],[sam,[e]],[ham,[b]],[contain,[[a,b]]],[drank,[[e,d]]]]).
+model([a,b,c,d,e,f,g],[
+                      [person,[e]],
+                      [box,[a,c]],
+                      [blue,[a,r]],
+                      [milk,[d]],
+                      [almond,[d]],
+                      [sam,[e]],
+                      [ham,[b]],
+                      [contain,[[a,b]]],
+                      [drank,[[e,d]]]
+                      ]).
 
 
 % ==================================================
@@ -497,6 +530,10 @@ sat(G1,ynq(Formula1),G2):-
 
 sat(G1,q(Formula1),G2):-
    sat(G1,Formula1,G2).
+%   getvaluefromlist(G).
+
+%getvaluefromlist([(X,Y)|L]) :-
+%  f(Z,Y).
 
 % ==================================================
 % Existential quantifier
