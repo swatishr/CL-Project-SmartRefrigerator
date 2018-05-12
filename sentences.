@@ -1,0 +1,56 @@
+--------
+sr_parse([every,blue,container,on,the,top,shelf,contains,a,sandwich,that,has,no,meat],X).
+
+X = s(forall(_9236, imp(the(_9236, and(and(shelf(_9236), top(_9236)), and(container(_9236), blue(_9236)))), exists(_9834, and(and(sandwich(_9834), no(_10156, and(meat(_10156), has(_9834, _10156)))), contain(_9236, _9834)))))) ;
+X = s(forall(_9236, imp(and(the(_9236, and(and(shelf(_9236), top(_9236)), container(_9236))), blue(_9236)), exists(_9834, and(and(sandwich(_9834), no(_10156, and(meat(_10156), has(_9834, _10156)))), contain(_9236, _9834)))))) ;
+
+
+----------
+sr_parse([the,white,box,that,the,freezer,contains,belongs,to,sue],X).
+
+----------
+sr_parse([is,there,an,egg,inside,the,blue,box],X).
+
+----------
+sr_parse([are,there,two,eggs,inside,the,blue,box],X).
+
+----------
+sr_parse([what,does,the,green,box,contain],X).
+X = what(_8790, the(_8842, and(and(box(_8842), green(_8842)), contain(_8790, _8842)))) ;
+X = q(_8790, and(thing(_8790), the(_8842, and(and(box(_8842), green(_8842)), contain(_8790, _8842))))) ;
+
+----------
+sr_parse([who,put,every,yellow,box,on,the,white,bowl],X).
+
+
+----------
+sr_parse([every,white,container,on,the,bottom,shelf,contains,a,banana],X).
+X = s(forall(_9210, imp(the(_9210, and(and(shelf(_9210), bottom(_9210)), and(container(_9210), white(_9210)))), exists(_9808, and(banana(_9808), contain(_9210, _9808)))))) ;
+X = s(forall(_9210, imp(and(the(_9210, and(and(shelf(_9210), bottom(_9210)), container(_9210))), white(_9210)), exists(_9808, and(banana(_9808), contain(_9210, _9808)))))) ;
+
+----------
+?- sr_parse([what,does,the,yellow,bowl,on,the,middle,shelf,contain],X).
+X = what(_8816, the(_8868, and(the(_8868, and(and(shelf(_8868), middle(_8868)), and(bowl(_8868), yellow(_8868)))), contain(_8816, _8868)))) ;
+X = q(_8816, and(thing(_8816), the(_8868, and(the(_8868, and(and(shelf(_8868), middle(_8868)), and(bowl(_8868), yellow(_8868)))), contain(_8816, _8868))))) ;
+X = what(_8816, the(_8868, and(and(the(_8868, and(and(shelf(_8868), middle(_8868)), bowl(_8868))), yellow(_8868)), contain(_8816, _8868)))) ;
+X = q(_8816, and(thing(_8816), the(_8868, and(and(the(_8868, and(and(shelf(_8868), middle(_8868)), bowl(_8868))), yellow(_8868)), contain(_8816, _8868))))) ;
+
+-----------
+sr_parse([are,there,two,watermelons,in,the,fridge],X).
+
+-----------
+sr_parse([is,there,milk],X).
+
+------------
+sr_parse([who,drank,the,almond,milk],X).
+X = who(_9102, the(_9150, and(and(milk(_9150), almond(_9150)), drank(_9102, _9150)))) ;
+X = q(_9102, and(person(_9102), the(_9150, and(and(milk(_9150), almond(_9150)), drank(_9102, _9150))))) ;
+
+------------
+sr_parse([which,milk,did,sam,drink],X).
+
+-----------
+sr_parse([is,there,a,sandwich,that,does,not,contain,meat],X).
+
+-----------
+sr_parse([is,there,an,empty,box,of,popsicles,in,the,freezer],X).
