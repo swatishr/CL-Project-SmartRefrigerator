@@ -264,6 +264,7 @@ lex(X, Word):-
       lemma(Word,be),
       X = be.
 
+
 lex(whpr((X^Y)^P),Word) :- lemma(Word,whpr), P=..[Word,X,Y].
 
 lex(dt((X^P)^(X^Q)^forall(X,imp(P,Q))),Word):-
@@ -400,7 +401,7 @@ rule(inv_s(Y,[WH]),[aux, np(X^Y),vp(X,[WH])]).
 %Transform What into Q
 rule(q(A,and(thing(A),X)),[what(A,X)]).
 rule(q(A,and(person(A),X)),[who(A,X)]).
-rule(q(A,and(thing(A),and(B,X))),[which((A^B),X)]).
+rule(q(A,and(thing(A),X)),[which(A,X)]).
 
 %rule(q(A,and(thing(A),X)),[who(A,rely(john,B))]).
 
