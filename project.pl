@@ -2,8 +2,8 @@
 % Main loop:
 % 1. Repeat "input-response" cycle until input starts with "bye"
 %    Each "input-response" cycle consists of:
-% 		1.1 Reading an input string and convert it to a tokenized list
-% 		1.2 Processing tokenized list
+%     1.1 Reading an input string and convert it to a tokenized list
+%     1.2 Processing tokenized list
 % ===========================================================
 %parse([every,white,container,on,the,bottom,shelf,contains,a,banana],X).
 chat:-
@@ -36,10 +36,10 @@ readinput(TokenList):-
 % ===========================================================
 
 process(Input):-
-	parse(Input,SemanticRepresentation),
-	modelchecker(SemanticRepresentation,Evaluation),
-	respond(Evaluation),!,
-	nl,nl.
+  parse(Input,SemanticRepresentation),
+  modelchecker(SemanticRepresentation,Evaluation),
+  respond(Evaluation),!,
+  nl,nl.
 
 process([bye|_]):-
    write('> bye!').
@@ -52,31 +52,32 @@ process([bye|_]):-
 % 3. Obtain FOL representation for input sentence
 % ===========================================================
 
-parse(Input, SemanticRepresentation):- sr_parse(Input).
+parse(Input, SemanticRepresentation):- sr_parse(Input,SemanticRepresentation).
 
 sr_parse([]).
-sr_parse(Sentence):-
-        srparse([],Sentence).
+sr_parse(Sentence,SemanticRepresentation):-
+        srparse([],Sentence,SemanticRepresentation).
 
-srparse([X],[]):-
-  numbervars(X,0,_),
-  write(X).
+srparse([X],[],SemanticRepresentation):-
+  %numbervars(X,0,_),
+  SemanticRepresentation = X.
+  %write(X).
 
-srparse([Z,Y,X|MoreStack],Words):-
+srparse([Z,Y,X|MoreStack],Words,SemanticRepresentation):-
        rule(LHS,[X,Y,Z]),
-       srparse([LHS|MoreStack],Words).
+       srparse([LHS|MoreStack],Words,SemanticRepresentation).
 
-srparse([Y,X|MoreStack],Words):-
+srparse([Y,X|MoreStack],Words,SemanticRepresentation):-
        rule(LHS,[X,Y]),
-       srparse([LHS|MoreStack],Words).
+       srparse([LHS|MoreStack],Words,SemanticRepresentation).
 
-srparse([X|MoreStack],Words):-
+srparse([X|MoreStack],Words,SemanticRepresentation):-
        rule(LHS,[X]),
-       srparse([LHS|MoreStack],Words).
+       srparse([LHS|MoreStack],Words,SemanticRepresentation).
 
-srparse(Stack,[Word|Words]):-
+srparse(Stack,[Word|Words],SemanticRepresentation):-
         lex(X,Word),
-        srparse([X|Stack],Words).
+        srparse([X|Stack],Words,SemanticRepresentation).
 
 
 % ===========================================================
@@ -147,6 +148,7 @@ lemma(drank,tv).
 lemma(drunk,tv).
 lemma(drinks,tv).
 lemma(contain,tv).
+lemma(is,tv).
 %lemma(contains,tv).
 
 lemma(has,tv).
@@ -206,7 +208,7 @@ lex(pn( (P)^X ),Word):-
 
 %lex(X,blue)
 lex(adj((X^P)^X^and(P,Q)),Word):-
-  	lemma(Word,adj),
+    lemma(Word,adj),
     Q =.. [Word,X].
 
 %rc(), n(_4686^meat(_4686))
@@ -217,7 +219,7 @@ lex(adj((X^P)^X^and(P,Q)),Word):-
 
 
 lex(dt((X^P)^(X^Q)^exists(X,(and(P,Q)))),Word):-
-  	lemma(Word,dtexists).
+    lemma(Word,dtexists).
 
 %lex(X,that).
 lex(rel([]), Word):- lemma(Word,rel).
@@ -239,8 +241,8 @@ lex(vacp((Y^Z)^Q^(X^P)^and(P,Q)),Word) :-
 %      Z =..[Word,X,Y].
 
 %lex(n(X^P),Word):-
-%	lemma(Word,n),
-%	P=.. [Word,X].
+% lemma(Word,n),
+% P=.. [Word,X].
 
 lex(X, Word):-
       lemma(Word,aux),
@@ -249,7 +251,7 @@ lex(X, Word):-
 lex(whpr(X^P),Word) :- lemma(Word,whpr), P=..[Word,X].
 
 lex(dt((X^P)^(X^Q)^forall(X,imp(P,Q))),Word):-
-		lemma(Word,dtforall).
+    lemma(Word,dtforall).
 
 %Last resource is to stem the word
 %Stemming for verb
@@ -264,8 +266,8 @@ lex(dtv(W^X^Y^Z,[]), Lemma):-
 %Stemming for noun
 %lex(X,egg)
 lex(n(X^P),Lemma):-
-	lemma(Lemma,n,Stem),
-	P=.. [Stem,X].
+  lemma(Lemma,n,Stem),
+  P=.. [Stem,X].
 
 
 % (X^Q)^exists(X,and(egg(X),Q))
@@ -348,7 +350,14 @@ rule(inv_s(Y,[WH]),[aux, np(X^Y),vp(X,[WH])]).
 %
 % np(and(the(A,and(box(A),B)),the(C,and(bowl(C),on(A^B,C)))))
 
-%rule(vp(W^Z),[dtv(W^X^Y),np(X^Y),pp((X^Y)^Z)]).
+% rule(np(Z),[np(X^Y),pp((X^Y)^Z)]).
+% rule(pp(Z),[vacp(X^Y^Z),np(X^Y)]).
+% rule(vp(X^K,[]),[tv(X^Y,[]),np(Y^K)]).
+
+% np((A^B)^forall(A,imp(and(box(A),yellow(A)),B)))
+% pp((A^B)^and(B,the(C,and(and(bowl(C),white(C)),on(A,C)))))
+
+rule(vp(Y^Z^C),[dtv(W^A^B^C),np((P^Q)^Y),pp((M^N)^Z)]).
 
 % VP -> VP PP eg: The top shelf contains eggs in a box
 % VP -> SV S eg:
@@ -357,7 +366,7 @@ rule(inv_s(Y,[WH]),[aux, np(X^Y),vp(X,[WH])]).
 % DT -> NP POS do we need to handle this? POS->s eg: The upper shelf contains Sam's box
 
 % S -> NP VP eg: The white container contains egg
-
+rule(s(Y),[np(X^Y),vp(X,_)]).
 
 % ===========================================================
 %  Modelchecker:
@@ -367,8 +376,149 @@ rule(inv_s(Y,[WH]),[aux, np(X^Y),vp(X,[WH])]).
 % ===========================================================
 
 % model(...,...)
-rule(s(Y),[np(X^Y),vp(X,_)]).
+model([a,b,c,d,r],[[box,[a,c]],[blue,[a,r]],[red,[c]],[ham,[b]],[contain,[[a,b]]]]).
 
+
+% ==================================================
+% Function i
+% Determines the value of a variable/constant in an assignment G
+% ==================================================
+
+i(Var,G,Value):- 
+    var(Var),
+    member([Var2,Value],G), 
+    Var == Var2.   
+
+i(C,_,Value):- 
+   nonvar(C),
+   f(C,Value).
+
+
+% ==================================================
+% Function F
+% Determines if a value is in the denotation of a Predicate/Relation
+% ==================================================
+
+f(Symbol,Value):- 
+   model(_,F),
+    member([Symbol,ListOfValues],F), 
+    member(Value,ListOfValues).  
+
+
+% ==================================================
+% Extension of a variable assignment
+% ==================================================
+
+extend(G,X,[ [X,Val] | G]):-
+   model(D,_),
+   member(Val,D).
+
+% ==================================================
+% Sentence
+% ==================================================
+
+sat(G1,s(Formula1),G2):-
+   sat(G1,Formula1,G2).
+
+% ==================================================
+% Existential quantifier
+% ==================================================
+
+sat(G1,exists(X,Formula),G3):-
+   extend(G1,X,G2),
+   sat(G2,Formula,G3).
+
+
+% ==================================================
+% Definite quantifier (semantic rather than pragmatic account)
+% ==================================================
+
+ sat(G1,the(X,and(A,B)),G3):-
+   sat(G1,exists(X,and(A,B)),G3),
+   i(X,G3,Value), 
+   \+ ( ( sat(G1,exists(X,A),G2), i(X,G2,Value2), \+(Value = Value2)) ).
+
+
+% ==================================================
+% Negation 
+% ==================================================
+
+sat(G,not(Formula2),G):-
+   \+ sat(G,Formula2,_).
+
+% ==================================================
+% Universal quantifier
+% ==================================================
+
+sat(G, forall(X,Formula2),G):-
+  sat(G,not( exists(X,not(Formula2) ) ),G).
+
+
+% ==================================================
+% Conjunction
+% ==================================================
+
+sat(G1,and(Formula1,Formula2),G3):-
+  sat(G1,Formula1,G2), 
+  sat(G2,Formula2,G3). 
+
+
+% ==================================================
+% Disjunction
+% ==================================================
+
+
+sat(G1,or(Formula1,Formula2),G2):-
+  ( sat(G1,Formula1,G2) ;
+    sat(G1,Formula2,G2) ).
+
+
+% ==================================================
+% Implication
+% ==================================================
+
+sat(G1,imp(Formula1,Formula2),G2):-
+   sat(G1,or(not(Formula1),Formula2),G2).
+
+
+% ==================================================
+% Predicates
+% ==================================================
+
+sat(G,Predicate,G):-
+   Predicate =.. [P,Var],
+   \+ (P = not),
+   i(Var,G,Value),
+   f(P,Value).
+
+% ==================================================
+% Two-place Relations
+% ==================================================
+
+sat(G,Rel,G):-
+   Rel =.. [R,Var1,Var2],
+   \+ ( member(R,[exists,forall,and,or,imp,the]) ),
+   i(Var1,G,Value1),
+   i(Var2,G,Value2),
+   f(R,[Value1,Value2]).
+
+% ==================================================
+% Sat rule for the
+% ==================================================
+
+sat(G1, the(X,Formula),G2):-
+  sat(G1,exists(X,Formula),G2).
+
+% ==================================================
+% Model Checker
+% ==================================================
+
+% check output of sat, if s and sat output is not empty, send [true_in_the_model]
+modelchecker(SemanticRepresentation, Evaluation):-
+
+    sat([],SemanticRepresentation,G),
+    (G=[] -> Evaluation = [not_true_in_the_model]; Evaluation = [true_in_the_model]).
+  
 % ===========================================================
 %  Respond
 %  For each input type, react appropriately.
@@ -376,29 +526,26 @@ rule(s(Y),[np(X^Y),vp(X,_)]).
 
 % Declarative true in the model
 respond(Evaluation) :-
-		Evaluation = [true_in_the_model],
-		write('That is correct'),!.
+    Evaluation = [true_in_the_model],
+    write('That is correct'),!.
 
 % Declarative false in the model
 respond(Evaluation) :-
-		Evaluation = [not_true_in_the_model],
-		write('That is not correct'),!.
+    Evaluation = [not_true_in_the_model],
+    write('That is not correct'),!.
 
 % Yes-No interrogative true in the model
 respond(Evaluation) :-
-		Evaluation = [yes_to_question],
-		write('yes').
+    Evaluation = [yes_to_question],
+    write('yes').
 
 % Yes-No interrogative false in the model
 respond(Evaluation) :-
-		Evaluation = [no_to_question],
-		write('no').
+    Evaluation = [no_to_question],
+    write('no').
 
 % wh-interrogative true in the model
 % ...
 
 % wh-interrogative false in the model
 % ...
-
-%s(forall(A,imp(and(and(container(A),blue(A)),exists(B,and(and(shelf(B),top(B)),on(A,B)))),
-%and(exists(C,and(sandwich(C),contains(A,C))),meat(D^has(C^contains(A,C),D)))))).
