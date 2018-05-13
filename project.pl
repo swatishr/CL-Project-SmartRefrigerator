@@ -109,7 +109,6 @@ lemma(every,dtforall).
 
 lemma(burger,n).
 lemma(ham,n).
-lemma(almond,n).
 lemma(box,n).
 lemma(banana,n).
 lemma(bowl,n).
@@ -143,8 +142,8 @@ lemma(bottom,adj).
 lemma(middle,adj).
 lemma(yellow,adj).
 
-lemma(one,num).
-lemma(two,num).
+lemma(one,number).
+lemma(two,number).
 
 lemma(is,be).
 lemma(was,be).
@@ -228,9 +227,15 @@ lex(adj((X^P)^X^and(P,Q)),Word):-
     Q =.. [Word,X].
 
 %lex(X,two)
-lex(num((X^P)^X^and(P,Q)),Word):-
-    lemma(Word,num),
-    Q =.. [Word,X].
+%lex(number((X^Q)^Z),Word):-
+%    lemma(Word,number),
+%    Z = and(P,Q),
+%    Q =.. [Word,X,Z].
+
+lex(number((X^P)^(X^Q)^Z),Word):-
+    lemma(Word,number),
+    A= and(P,Q),
+    Z =..[Word,X,A].
 
 %rc(), n(_4686^meat(_4686))
 
@@ -368,8 +373,9 @@ rule(np((X^Q)^exists(X,and(P,Q))),[n(X^P)]).
 rule(n(X^Z),[n(X^Y),pp((X^Y)^Z)]).
 % N -> Adj N
 rule(n(Y),[adj(X^Y),n(X)]).
-% N -> Num N
-rule(n(Y),[num(X^Y),n(X)]).
+
+% NP-> Num N
+rule(np(Y),[number(X^Y),n(X)]).
 
 %rule(n(X),[vacp([]),n(X)]).
 
@@ -422,9 +428,9 @@ rule(Z,[whpr((X^Y)^Z), n(X^P), inv_s(Y,[X])]).
 rule(inv_s(Y,[WH]),[aux, np(X^Y),vp(X,[WH])]).
 
 %Transform What into Q
-rule(q(exists(A,and(thing(A),X))),[what(A,X)]).
-rule(q(exists(A,and(person(A),X))),[who(A,X)]).
-rule(q(exists(A,and(thing(A),X))),[which(A,X)]).
+rule(q(A,and(thing(A),X)),[what(A,X)]).
+rule(q(A,and(person(A),X)),[who(A,X)]).
+rule(q(A,and(thing(A),X)),[which(A,X)]).
 
 %rule(q(A,and(thing(A),X)),[who(A,rely(john,B))]).
 
@@ -459,18 +465,26 @@ rule(s(Y),[np(X^Y),vp(X,_)]).
 % ===========================================================
 
 % model(...,...)
-model([a,b,c,d,e,f,g],[
-                      [person,[e]],
-                      [box,[a,c]],
-                      [blue,[a,r]],
-                      [milk,[d]],
-                      [almond,[d]],
-                      [sam,[e]],
-                      [ham,[b]],
-                      [contain,[[a,b]]],
-                      [drank,[[e,d]]]
+model([sam1,box1,box2,blue1,blue2,milk1,ham1],[
+                      [person,[sam1]],
+                      [thing,[box1,box2,milk1,almond1,ham1]],
+                      [box,[box1,box2]],
+                      [blue,[box1]],
+                      [milk,[milk1]],
+                      [almond,[milk1]],
+                      [sam,[sam1]],
+                      [ham,[ham1]],
+                      [contain,[[box1,ham1]]],
+                      [drank,[[sam1,milk1]]]
                       ]).
 
+% is_a rule: Ontology
+%is_a(sam,person).
+%is_a(tom,person).
+%is_a(box,thing).
+%is_a(milk,thing).
+%is_a(ham,thing).
+%is_a(ham,meat).
 
 % ==================================================
 % Function i
@@ -528,12 +542,17 @@ sat(G1,ynq(Formula1),G2):-
 % WH Question
 % ==================================================
 
-sat(G1,q(Formula1),G2):-
-   sat(G1,Formula1,G2).
+sat(G1,q(X,Formula1),G2):-
+   sat(G1,exists(X,Formula1),[_,[_,Ans]]),
+   model(B,G),findall(V,(member([V,C],G), member(D,C), Ans == D),G2).
+
 %   getvaluefromlist(G).
 
 %getvaluefromlist([(X,Y)|L]) :-
-%  f(Z,Y).
+%  model(_,F),
+%  member([_,ListOfValues],F),
+%  member([Y,],ListOfValues),
+%  write(Z).
 
 % ==================================================
 % Existential quantifier
@@ -552,6 +571,13 @@ sat(G1,exists(X,Formula),G3):-
    i(X,G3,Value), 
    \+ ( ( sat(G1,exists(X,A),G2), i(X,G2,Value2), \+(Value = Value2)) ).
 
+% ==================================================
+% Numeric quantifiers
+% ==================================================
+
+sat(G1,one(X,Formula),G3):-
+   sat(G1,exists(X,and(A,B)),G3),
+   sat(G2,Formula,G3).
 
 % ==================================================
 % Negation 
