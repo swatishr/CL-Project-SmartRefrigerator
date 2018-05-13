@@ -465,7 +465,7 @@ rule(s(Y),[np(X^Y),vp(X,_)]).
 % ===========================================================
 
 % model(...,...)
-model([sam1,box1,box2,blue1,blue2,milk1,ham1],[
+model([sam1,box1,box2,egg1,egg2,blue1,blue2,milk1,ham1],[
                       [person,[sam1]],
                       [thing,[box1,box2,milk1,almond1,ham1]],
                       [box,[box1,box2]],
@@ -474,7 +474,8 @@ model([sam1,box1,box2,blue1,blue2,milk1,ham1],[
                       [almond,[milk1]],
                       [sam,[sam1]],
                       [ham,[ham1]],
-                      [contain,[[box1,ham1]]],
+                      [egg,[egg1,egg2]],
+                      [contain,[[box2,ham1],[box1,egg1],[box1,egg2],[box2,egg1]]],
                       [drank,[[sam1,milk1]]]
                       ]).
 
@@ -525,7 +526,7 @@ extend(G,X,[ [X,Val] | G]):-
 % ==================================================
 
 sat(G1,s(Formula1),G2):-
-   sat(G1,Formula1,G),
+   sat(G1,Formula1,G),write(G),
    (G==[] -> G2 = [not_true_in_the_model]; 
       G2 = [true_in_the_model]).
 
@@ -546,13 +547,13 @@ sat(G1,q(X,Formula1),G2):-
    sat(G1,exists(X,Formula1),[_,[_,Ans]]),
    model(B,G),findall(V,(member([V,C],G), member(D,C), Ans == D),G2).
 
-%   getvaluefromlist(G).
+% ==================================================
+% Numeric quantifiers
+% ==================================================
 
-%getvaluefromlist([(X,Y)|L]) :-
-%  model(_,F),
-%  member([_,ListOfValues],F),
-%  member([Y,],ListOfValues),
-%  write(Z).
+sat(G1,one(X,Formula),G3):-
+   sat(G1,exists(X,Formula),G3),write(G3).
+%  [_,[Key,Val]] model(B,G),findall(V,(member([V,C],G), member(D,C), Ans == D),G2).
 
 % ==================================================
 % Existential quantifier
@@ -570,14 +571,6 @@ sat(G1,exists(X,Formula),G3):-
    sat(G1,exists(X,and(A,B)),G3),
    i(X,G3,Value), 
    \+ ( ( sat(G1,exists(X,A),G2), i(X,G2,Value2), \+(Value = Value2)) ).
-
-% ==================================================
-% Numeric quantifiers
-% ==================================================
-
-sat(G1,one(X,Formula),G3):-
-   sat(G1,exists(X,and(A,B)),G3),
-   sat(G2,Formula,G3).
 
 % ==================================================
 % Negation 
@@ -646,8 +639,8 @@ sat(G,Rel,G):-
 % Sat rule for the
 % ==================================================
 
-%sat(G1, the(X,Formula),G2):-
-%  sat(G1,exists(X,Formula),G2).
+sat(G1, the(X,Formula),G2):-
+  sat(G1,exists(X,Formula),G2).
 
 % ==================================================
 % Model Checker
@@ -683,11 +676,15 @@ respond(Evaluation) :-
     Evaluation = [no_to_question],
     write('no').
 
+% wh-interrogative false in the model
+% ...
+respond(Evaluation) :-
+  Evaluation = [],
+  write('Nothing').
+
 % wh-interrogative true in the model
 % ...
 respond(Evaluation) :-
-    Evaluation = [no_to_question],
-    write('no').
-
-% wh-interrogative false in the model
-% ...
+    findall(_,(member(A,Evaluation),lemma(A,adj),write(A),write(' ')),L1),
+    findall(_,(member(A,Evaluation),lemma(A,n),write(A),write(' ')),L2),
+    findall(_,(member(A,Evaluation),lemma(A,pn),write(A),write(' ')),L3).
