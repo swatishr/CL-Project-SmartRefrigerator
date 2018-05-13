@@ -186,7 +186,7 @@ lemma(on,p).
 lemma(on,vacp).
 lemma(to,vacp).
 lemma(there,vacp).
-
+lemma(there,vacp_).
 
 lemma(who,whpr).
 lemma(which,whpr).
@@ -216,7 +216,7 @@ compare_lemma([W|WordList],[W|LemmaList]) :-
 % what,does,the,green,box,contain
 % who,put,every,yellow,box,on,the,white,bowl
 
-%lex(X,tom).
+
 lex(pn( (P)^X ),Word):-
     lemma(Word,pn),
     P=..[^,Word,X].
@@ -227,15 +227,9 @@ lex(adj((X^P)^X^and(P,Q)),Word):-
     Q =.. [Word,X].
 
 %lex(X,two)
-%lex(number((X^Q)^Z),Word):-
-%    lemma(Word,number),
-%    Z = and(P,Q),
-%    Q =.. [Word,X,Z].
-
-lex(number((X^P)^(X^Q)^Z),Word):-
-    lemma(Word,number),
-    A= and(P,Q),
-    Z =..[Word,X,A].
+lex(num((X^P)^X^and(P,Q)),Word):-
+    lemma(Word,num),
+    Q =.. [Word,X].
 
 %rc(), n(_4686^meat(_4686))
 
@@ -263,12 +257,19 @@ lex(dtnot((X^P)^(X^Q)^not(X,(and(P,Q)))),Word):-
 
 %lex(X,on)
 
-lex(vacp([]),Word) :-
-  lemma(Word,vacp).
+lex(vacp([]),Word) :- lemma(Word,vacp).
+%tryng special case like there on questions
+lex(vacp_([]),Word) :- lemma(Word,vacp_).
 
 lex(p((Y^Z)^Q^(X^P)^and(P,Q)),Word) :-
   lemma(Word,p),
   Z =.. [Word,X,Y].
+
+lex(p(X^Y^P),Word) :-
+  lemma(Word,p),
+  P =.. [Word,X,Y].
+
+
 
 %lex(tv(X^Y^Z,[]), Word):-
 %      lemma(Word,tv),
@@ -286,7 +287,6 @@ lex(X, Word):-
       lemma(Word,be),
       X = be.
 
-
 lex(whpr((X^Y)^P),Word) :- lemma(Word,whpr), P=..[Word,X,Y].
 
 lex(dt((X^P)^(X^Q)^forall(X,imp(P,Q))),Word):-
@@ -298,6 +298,11 @@ lex(tv(X^Y^Z,[]), Lemma):-
       lemma(Lemma,tv,Stem),
       Z =..[Stem,X,Y].
 
+%In case of questions
+lex(tv(X^Y^Z,[]), Lemma):-
+      lemma(Lemma,tv,Stem),
+      Z =..[Stem,Y,X].
+
 lex(pv(X^Y^Z,[]), Lemma):-
       lemma(Lemma,pv,Stem),
       Z =..[Stem,X,Y].
@@ -306,14 +311,11 @@ lex(dtv(W^X^Y^Z,[]), Lemma):-
       lemma(Lemma,dtv,Stem),
       Z =..[Stem,W,X,Y].
 
-
-
 %Stemming for noun
 %lex(X,egg)
 lex(n(X^P),Lemma):-
   lemma(Lemma,n,Stem),
   P=.. [Stem,X].
-
 
 % (X^Q)^exists(X,and(egg(X),Q))
 
@@ -334,25 +336,9 @@ lex(n(X^P),Lemma):-
 % lex(F,freezer),lex(G,contains),lex(H,belongs),lex(I,to),lex(J,sue),
 % rule(K,[J]), rule(L,[H,I]), rule(M,[G]),.
 
-%sr_parse([is,there,an,egg,inside,the,blue,box]).
-
-
-
-%sr_parse([tom,put,a,box,on,the,bowl])
-% lex(A,tom), lex(B,put),
-% lex(C,a), lex(D,box),
-% lex(E,on), lex(F,the), lex(G,bowl),
-% rule(H,[A]), rule(I,[C,D]), rule(J,[F,G]), rule(K,[E,J]),
-% rule(X,[B,I,K])., rule(S,[H,X]).
-
-% B = dtv(A^F^G^put(A, F, G), []),
-% I = np(    (F^G) ^exists(F, and(box(F), G)) ),
-% K = pp(    (F^G) ^the(F, and(bowl(F), G)))
-
-%rule(vp(X^K,[]),[dtv(X^A^K,[]),np(A),pp(A^C)]).
-
-%rule(vp(X^K,[]),[tv(X^Y,[]),np(Y^K)]).
-%np(X^Y),pp((X^Y)^Z)
+rule(vp(X^Z,[]),[dtv(A^B^X^Z,[]),np(Y^B),pp(Y^A)]).
+rule(ynq(Y),[aux, np(X^Y),vp(X,[])]).
+rule(ynq(Y),[be, np(X^Y),pp(X)]).
 
 %RC -> REL VP
 rule(rc(X,[]),[rel([]),vp(X,[])]).
@@ -373,18 +359,20 @@ rule(np((X^Q)^exists(X,and(P,Q))),[n(X^P)]).
 rule(n(X^Z),[n(X^Y),pp((X^Y)^Z)]).
 % N -> Adj N
 rule(n(Y),[adj(X^Y),n(X)]).
-
-% NP-> Num N
-rule(np(Y),[number(X^Y),n(X)]).
-
-%rule(n(X),[vacp([]),n(X)]).
+% N -> Num N
+rule(n(Y),[num(X^Y),n(X)]).
 
 % NP -> PN
 rule(np(X),[pn(X)]).
+
+%PP --> P NP (for other type of p)
+rule(pp(X^K),[p(X^Y),np(Y^K)]).
 % PP -> P NP
 rule(pp(Z),[p(X^Y^Z),np(X^Y)]).
 % PP -> vacp NP
 rule(pp(X^Y),[vacp([]),np(X^Y)]).
+% NP -> VACP_ np
+rule(np(X^Y),[vacp_([]),np(X^Y)]).
 % VP -> IV
 rule(vp(X,[]),[iv(X,[])]).
 % VP -> TV NP
@@ -393,14 +381,6 @@ rule(vp(X^K,[]),[tv(X^Y,[]),np(Y^K)]).
 
 % IV -> TV
 rule(iv(Y,[X]),[tv(X^Y,[])]).
-
-%lex(A,who),lex(B,did),lex(C,john),lex(D,rely),lex(E,on), rule(F,[D,E]).
-% lex(A,who),lex(B,did),lex(C,john),lex(D,rely),lex(E,on),
-% rule(F,[D,E]), rule(G,[C]), rule(H,[G,F]).
-
-% lex(A,is),lex(B,there),lex(C,an), lex(D,egg), lex(E,inside),lex(F,the),lex(G,blue),
-% lex(H,box), rule(P,[G,H]), rule(Q,[F,P]), rule(R,[E,Q]), rule(S,[C,D]),
-% rule(T,[B,S]), rule(U,[A,T,R]).
 
 rule(vp(X,[]),[pv(X,[]),vacp(_)]).
 
@@ -412,25 +392,20 @@ rule(s(X,[WH]),[vp(X,[WH])]).
 
 % WH QUESTIONS rules
 rule(Y,[whpr(X^Y),vp(X,[])]).
-
 rule(Z,[whpr(Y^Z), ynq(Y)]).
-
-rule(ynq(Y),[aux, np(X^Y),vp(X,[])]).
-
-rule(ynq(Z),[be, np(X^Y),pp((X^Y)^Z)]).
-
+rule(pp(Z),[p(X^Y^Z),np(X^Y)]).
 rule(Z,[whpr((X^Y)^Z), inv_s(Y,[X])]).
 
 %which milk did sam drink
-rule(Z,[whpr((X^Y)^Z), n(X^P), inv_s(Y,[X])]).
+rule(Z,[whpr((X^Y)^Z), n(X^_), inv_s(Y,[X])]).
 
 %S -> AUX NP VP
 rule(inv_s(Y,[WH]),[aux, np(X^Y),vp(X,[WH])]).
 
 %Transform What into Q
-rule(q(A,and(thing(A),X)),[what(A,X)]).
-rule(q(A,and(person(A),X)),[who(A,X)]).
-rule(q(A,and(thing(A),X)),[which(A,X)]).
+rule(q(exists(A,and(thing(A),X))),[what(A,X)]).
+rule(q(exists(A,and(person(A),X))),[who(A,X)]).
+rule(q(exists(A,and(thing(A),X))),[which(A,X)]).
 
 %rule(q(A,and(thing(A),X)),[who(A,rely(john,B))]).
 
@@ -492,12 +467,12 @@ model([sam1,box1,box2,egg1,egg2,blue1,blue2,milk1,ham1],[
 % Determines the value of a variable/constant in an assignment G
 % ==================================================
 
-i(Var,G,Value):- 
+i(Var,G,Value):-
     var(Var),
-    member([Var2,Value],G), 
-    Var == Var2.   
+    member([Var2,Value],G),
+    Var == Var2.
 
-i(C,_,Value):- 
+i(C,_,Value):-
    nonvar(C),
    f(C,Value).
 
@@ -507,10 +482,10 @@ i(C,_,Value):-
 % Determines if a value is in the denotation of a Predicate/Relation
 % ==================================================
 
-f(Symbol,Value):- 
+f(Symbol,Value):-
    model(_,F),
-    member([Symbol,ListOfValues],F), 
-    member(Value,ListOfValues).  
+    member([Symbol,ListOfValues],F),
+    member(Value,ListOfValues).
 
 
 % ==================================================
@@ -527,7 +502,7 @@ extend(G,X,[ [X,Val] | G]):-
 
 sat(G1,s(Formula1),G2):-
    sat(G1,Formula1,G),write(G),
-   (G==[] -> G2 = [not_true_in_the_model]; 
+   (G==[] -> G2 = [not_true_in_the_model];
       G2 = [true_in_the_model]).
 
 % ==================================================
@@ -536,7 +511,7 @@ sat(G1,s(Formula1),G2):-
 
 sat(G1,ynq(Formula1),G2):-
    sat(G1,Formula1,G),
-   (G==[] -> G2 = [no_to_question]; 
+   (G==[] -> G2 = [no_to_question];
       G2 = [yes_to_question]).
 
 % ==================================================
@@ -545,7 +520,7 @@ sat(G1,ynq(Formula1),G2):-
 
 sat(G1,q(X,Formula1),G2):-
    sat(G1,exists(X,Formula1),[_,[_,Ans]]),
-   model(B,G),findall(V,(member([V,C],G), member(D,C), Ans == D),G2).
+   model(_,G),findall(V,(member([V,C],G), member(D,C), Ans == D),G2).
 
 % ==================================================
 % Numeric quantifiers
@@ -569,11 +544,11 @@ sat(G1,exists(X,Formula),G3):-
 
  sat(G1,the(X,and(A,B)),G3):-
    sat(G1,exists(X,and(A,B)),G3),
-   i(X,G3,Value), 
+   i(X,G3,Value),
    \+ ( ( sat(G1,exists(X,A),G2), i(X,G2,Value2), \+(Value = Value2)) ).
 
 % ==================================================
-% Negation 
+% Negation
 % ==================================================
 
 sat(G,not(Formula2),G):-
@@ -592,8 +567,8 @@ sat(G, forall(X,Formula2),G):-
 % ==================================================
 
 sat(G1,and(Formula1,Formula2),G3):-
-  sat(G1,Formula1,G2), 
-  sat(G2,Formula2,G3). 
+  sat(G1,Formula1,G2),
+  sat(G2,Formula2,G3).
 
 
 % ==================================================
@@ -649,7 +624,7 @@ sat(G1, the(X,Formula),G2):-
 % check output of sat, if s and sat output is not empty, send [true_in_the_model]
 modelchecker(SemanticRepresentation, Evaluation):-
     sat([],SemanticRepresentation,Evaluation).
-    
+
 
 % ===========================================================
 %  Respond
