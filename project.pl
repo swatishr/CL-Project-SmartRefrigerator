@@ -59,7 +59,7 @@ sr_parse(Sentence,SemanticRepresentation):-
         srparse([],Sentence,SemanticRepresentation).
 
 srparse([X],[],SemanticRepresentation):-
-  numbervars(X,0,_),
+  %numbervars(X,0,_),
   SemanticRepresentation = X.
   %write(X).
 
@@ -403,9 +403,9 @@ rule(Z,[whpr((X^Y)^Z), n(X^_), inv_s(Y,[X])]).
 rule(inv_s(Y,[WH]),[aux, np(X^Y),vp(X,[WH])]).
 
 %Transform What into Q
-rule(q(exists(A,and(thing(A),X))),[what(A,X)]).
-rule(q(exists(A,and(person(A),X))),[who(A,X)]).
-rule(q(exists(A,and(thing(A),X))),[which(A,X)]).
+rule(q(A,and(thing(A),X)),[what(A,X)]).
+rule(q(A,and(person(A),X)),[who(A,X)]).
+rule(q(A,and(thing(A),X)),[which(A,X)]).
 
 %rule(q(A,and(thing(A),X)),[who(A,rely(john,B))]).
 
@@ -440,18 +440,14 @@ rule(s(Y),[np(X^Y),vp(X,_)]).
 % ===========================================================
 
 % model(...,...)
-model([sam1,box1,box2,egg1,egg2,blue1,blue2,milk1,ham1],[
+model([sam1,milk1,almond1],[
                       [person,[sam1]],
-                      [thing,[box1,box2,milk1,almond1,ham1]],
-                      [box,[box1,box2]],
-                      [blue,[box1]],
+                      [thing,[milk1]],
                       [milk,[milk1]],
-                      [almond,[milk1]],
+                      [almond,[milk1,almond1]],
                       [sam,[sam1]],
-                      [ham,[ham1]],
-                      [egg,[egg1,egg2]],
-                      [contain,[[box2,ham1],[box1,egg1],[box1,egg2],[box2,egg1]]],
-                      [drank,[[sam1,milk1]]]
+                      [drank,[[sam1,milk1]]],
+                      [drink,[[sam1,milk1]]]
                       ]).
 
 % is_a rule: Ontology
@@ -501,7 +497,7 @@ extend(G,X,[ [X,Val] | G]):-
 % ==================================================
 
 sat(G1,s(Formula1),G2):-
-   sat(G1,Formula1,G),write(G),
+   sat(G1,Formula1,G),
    (G==[] -> G2 = [not_true_in_the_model];
       G2 = [true_in_the_model]).
 
@@ -517,9 +513,11 @@ sat(G1,ynq(Formula1),G2):-
 % ==================================================
 % WH Question
 % ==================================================
+%[[_22892, milk1], [_22888, sam1]]=[[_24550, _24556]]
 
 sat(G1,q(X,Formula1),G2):-
-   sat(G1,exists(X,Formula1),[_,[_,Ans]]),
+   sat(G1,exists(X,Formula1),G3),
+   lasttuple([_,Ans],G3),
    model(_,G),findall(V,(member([V,C],G), member(D,C), Ans == D),G2).
 
 % ==================================================
@@ -617,6 +615,14 @@ sat(G,Rel,G):-
 sat(G1, the(X,Formula),G2):-
   sat(G1,exists(X,Formula),G2).
 
+
+% ==================================================
+% To find last element in the list
+% ==================================================
+
+lasttuple(X,[X]).
+lasttuple(X,[_|Y]) :- lasttuple(X,Y).
+
 % ==================================================
 % Model Checker
 % ==================================================
@@ -660,6 +666,6 @@ respond(Evaluation) :-
 % wh-interrogative true in the model
 % ...
 respond(Evaluation) :-
-    findall(_,(member(A,Evaluation),lemma(A,adj),write(A),write(' ')),L1),
-    findall(_,(member(A,Evaluation),lemma(A,n),write(A),write(' ')),L2),
-    findall(_,(member(A,Evaluation),lemma(A,pn),write(A),write(' ')),L3).
+    findall(_,(member(A,Evaluation),lemma(A,adj),write(A),write(' ')),_),
+    findall(_,(member(A,Evaluation),lemma(A,n),write(A),write(' ')),_),
+    findall(_,(member(A,Evaluation),lemma(A,pn),write(A),write(' ')),_).

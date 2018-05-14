@@ -10,6 +10,7 @@ sr_parse([the,white,box,that,the,freezer,contains,belongs,to,sue],X).
 
 ----------
 sr_parse([is,there,an,egg,inside,the,blue,box],X).
+--works
 
 ----------
 sr_parse([are,there,two,eggs,inside,the,blue,box],X).
@@ -21,7 +22,7 @@ X = q(_8790, and(thing(_8790), the(_8842, and(and(box(_8842), green(_8842)), con
 
 ----------
 sr_parse([who,put,every,yellow,box,on,the,white,bowl],X).
-
+--works
 
 ----------
 sr_parse([every,white,container,on,the,bottom,shelf,contains,a,banana],X).
@@ -37,6 +38,9 @@ X = q(_8816, and(thing(_8816), the(_8868, and(and(the(_8868, and(and(shelf(_8868
 
 -----------
 sr_parse([are,there,two,watermelons,in,the,fridge],X).
+sr_parse([is,there,milk],X).
+X = vp(A^exists(B, and(milk(B), A is B)), []) ;
+X = vp(A^exists(B, and(milk(B), B is A)), []) ;
 
 -----------
 sr_parse([is,there,milk],X).
@@ -54,3 +58,18 @@ sr_parse([is,there,a,sandwich,that,does,not,contain,meat],X).
 
 -----------
 sr_parse([is,there,an,empty,box,of,popsicles,in,the,freezer],X).
+
+
+model([sam1,box1,box2,egg1,egg2,blue1,blue2,milk1,ham1],[
+                      [person,[sam1]],
+                      [thing,[box1,box2,milk1,almond1,ham1]],
+                      [box,[box1,box2]],
+                      [blue,[box1]],
+                      [milk,[milk1]],
+                      [almond,[milk1]],
+                      [sam,[sam1]],
+                      [ham,[ham1]],
+                      [egg,[egg1,egg2]],
+                      [contain,[[box2,ham1],[box1,egg1],[box1,egg2],[box2,egg1]]],
+                      [drank,[[sam1,milk1]]]
+                      ]).
