@@ -140,6 +140,7 @@ lemma(white,adj).
 lemma(top,adj).
 lemma(bottom,adj).
 lemma(middle,adj).
+lemma(skim,adj).
 lemma(yellow,adj).
 
 lemma(one,number).
@@ -339,6 +340,14 @@ lex(n(X^P),Lemma):-
 rule(vp(X^Z,[]),[dtv(A^B^X^Z,[]),np(Y^B),pp(Y^A)]).
 rule(ynq(Y),[aux, np(X^Y),vp(X,[])]).
 rule(ynq(Y),[be, np(X^Y),pp(X)]).
+%which milk did sam drink
+rule(Z,[whpr((X^Y)^Z), n(X^_), inv_s(Y,[X])]).
+
+
+% lex(A,milk), rule(B,[A]), lex(C,there), rule(D,[C,B]).
+% sr_parse([is,there,milk],X).
+
+rule(ynq(Y),[be, np(X^Y)]).
 
 %RC -> REL VP
 rule(rc(X,[]),[rel([]),vp(X,[])]).
@@ -354,6 +363,7 @@ rule(np(Y),[dtnot(X^Y),n(X)]).
 
 % NP ->N
 rule(np((X^Q)^exists(X,and(P,Q))),[n(X^P)]).
+rule(np(X^exists(X,and(P))),[n(X^P)]).
 
 % N -> N PP
 rule(n(X^Z),[n(X^Y),pp((X^Y)^Z)]).
@@ -396,9 +406,6 @@ rule(Z,[whpr(Y^Z), ynq(Y)]).
 rule(pp(Z),[p(X^Y^Z),np(X^Y)]).
 rule(Z,[whpr((X^Y)^Z), inv_s(Y,[X])]).
 
-%which milk did sam drink
-rule(Z,[whpr((X^Y)^Z), n(X^_), inv_s(Y,[X])]).
-
 %S -> AUX NP VP
 rule(inv_s(Y,[WH]),[aux, np(X^Y),vp(X,[WH])]).
 
@@ -406,6 +413,7 @@ rule(inv_s(Y,[WH]),[aux, np(X^Y),vp(X,[WH])]).
 rule(q(exists(A,and(thing(A),X))),[what(A,X)]).
 rule(q(exists(A,and(person(A),X))),[who(A,X)]).
 rule(q(exists(A,and(thing(A),X))),[which(A,X)]).
+
 
 %rule(q(A,and(thing(A),X)),[who(A,rely(john,B))]).
 
