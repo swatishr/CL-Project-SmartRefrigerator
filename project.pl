@@ -145,6 +145,10 @@ lemma(yellow,adj).
 
 lemma(one,number).
 lemma(two,number).
+lemma(three,number).
+lemma(four,number).
+lemma(five,number).
+lemma(six,number).
 
 lemma(is,be).
 lemma(was,be).
@@ -158,6 +162,7 @@ lemma(drunk,tv).
 lemma(drinks,tv).
 lemma(contain,tv).
 lemma(is,tv).
+lemma(belong,tv).
 
 lemma(has,tv).
 lemma(had,tv).
@@ -172,8 +177,13 @@ lemma(does,aux).
 lemma(put,dtv).
 lemma(puts,dtv).
 
+lemma(expire,iv).
+lemma(spoil,iv).
+lemma(damage,iv).
+lemma(freeze,iv).
+lemma(tear,iv).
+
 lemma(that,rel).
-% WH questions vs REL, how to figure ambiguity/
 % lemma(who,rel).
 % lemma(what,rel).
 % lemma(which,rel).
@@ -228,9 +238,10 @@ lex(adj((X^P)^X^and(P,Q)),Word):-
     Q =.. [Word,X].
 
 %lex(X,two)
-lex(num((X^P)^X^and(P,Q)),Word):-
-    lemma(Word,num),
-    Q =.. [Word,X].
+lex(dt((X^P)^(X^Q)^Z),Word):-
+   lemma(Word,number),
+    A = and(P,Q),
+    Z =..[Word,X,A].
 
 %rc(), n(_4686^meat(_4686))
 
@@ -270,7 +281,14 @@ lex(p(X^Y^P),Word) :-
   lemma(Word,p),
   P =.. [Word,X,Y].
 
+%Newly added p with swapping of input arguments
+lex(p((Y^Z)^Q^(X^P)^and(P,Q)),Word) :-
+  lemma(Word,p),
+  Z =.. [Word,Y,X].
 
+lex(p(X^Y^P),Word) :-
+  lemma(Word,p),
+  P =.. [Word,Y,X].
 
 %lex(tv(X^Y^Z,[]), Word):-
 %      lemma(Word,tv),
@@ -337,6 +355,7 @@ lex(n(X^P),Lemma):-
 % lex(F,freezer),lex(G,contains),lex(H,belongs),lex(I,to),lex(J,sue),
 % rule(K,[J]), rule(L,[H,I]), rule(M,[G]),.
 
+%DTV
 rule(vp(X^Z,[]),[dtv(A^B^X^Z,[]),np(Y^B),pp(Y^A)]).
 rule(ynq(Y),[aux, np(X^Y),vp(X,[])]).
 rule(ynq(Y),[be, np(X^Y),pp(X)]).
@@ -351,6 +370,7 @@ rule(ynq(Y),[be, np(X^Y)]).
 
 %RC -> REL VP
 rule(rc(X,[]),[rel([]),vp(X,[])]).
+rule(rc(X,[Z]),[rel([]),s(X,[Z])]).
 
 rule(n(X^and(Y,Z)),[n(X^Y),rc(Z,[X])]).
 rule(n(X^and(Y,Z)),[n(X^Y),rc(X^Z,[])]).
@@ -369,8 +389,9 @@ rule(np(X^exists(X,and(P))),[n(X^P)]).
 rule(n(X^Z),[n(X^Y),pp((X^Y)^Z)]).
 % N -> Adj N
 rule(n(Y),[adj(X^Y),n(X)]).
+
 % N -> Num N
-rule(n(Y),[num(X^Y),n(X)]).
+rule(n(Y),[number(X^Y),n(X)]).
 
 % NP -> PN
 rule(np(X),[pn(X)]).
@@ -448,14 +469,22 @@ rule(s(Y),[np(X^Y),vp(X,_)]).
 % ===========================================================
 
 % model(...,...)
-model([sam1,milk1,almond1],[
+model([sam1,milk1,almond1,egg1,egg2,box1,container1,shelf1,banana1],[
                       [person,[sam1]],
-                      [thing,[milk1]],
+                      [thing,[box1,milk1,egg1,egg2]],
                       [milk,[milk1]],
+                      [container,[container1]],
+                      [white,[container1]],
+                      [shelf,[shelf1]],
+                      [banana,[banana1]],
                       [almond,[milk1,almond1]],
                       [sam,[sam1]],
+                      [box,[box1]],
+                      [egg,[egg1,egg2]],
                       [drank,[[sam1,milk1]]],
-                      [drink,[[sam1,milk1]]]
+                      [drink,[[sam1,milk1]]],
+                      [contain,[[box1,egg1],[box1,egg2],[container1,banana1]]],
+                      [in,[[box1,egg1],[box1,egg2]]]
                       ]).
 
 % is_a rule: Ontology
@@ -505,9 +534,8 @@ extend(G,X,[ [X,Val] | G]):-
 % ==================================================
 
 sat(G1,s(Formula1),G2):-
-   sat(G1,Formula1,G),
-   (G==[] -> G2 = [not_true_in_the_model];
-      G2 = [true_in_the_model]).
+   (sat(G1,Formula1,G) -> G2 = [true_in_the_model];
+      G2 = [not_true_in_the_model]).
 
 % ==================================================
 % Yes-No Question
@@ -532,9 +560,15 @@ sat(G1,q(X,Formula1),G2):-
 % Numeric quantifiers
 % ==================================================
 
+%for numeral one
 sat(G1,one(X,Formula),G3):-
-   sat(G1,exists(X,Formula),G3),write(G3).
-%  [_,[Key,Val]] model(B,G),findall(V,(member([V,C],G), member(D,C), Ans == D),G2).
+  sat(G1,exists(X,Formula),G3),
+  length(G3,Len), Len>=1.
+
+%for numeral two
+sat(G1,two(X,Formula),G3):-
+  sat(G1,exists(X,Formula),G3),
+  length(G3,Len), Len>=2.
 
 % ==================================================
 % Existential quantifier
